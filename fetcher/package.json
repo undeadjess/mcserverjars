@@ -7,5 +7,8 @@
   },
   "author": "undeadjess",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "dependencies": {
+    "sqlite3": "^5.1.7"
+  }
 }

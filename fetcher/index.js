@@ -117,4 +117,15 @@ function updateDatabase() {
     db.run('COMMIT');
 }
 
+
+// db.all('SELECT * FROM vanilla', [], (err, rows) => {
+//     if (err) {
+//         throw err;
+//     }
+//     rows.forEach((row) => {
+//         console.log(row);
+//     });
+// });
+
+// run the main loop once an hour (do you say an hour?? cause it has an o sound but idk)
 setInterval(updateDatabase, 3600000)
