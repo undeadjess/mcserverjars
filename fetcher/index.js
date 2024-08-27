@@ -47,6 +47,33 @@ async function getVanillaServerURLs() {
 }
 
 
+// future plans
+// paper
+async function getPaperServerURLs() {
+    return null
+}
+
+// purpur
+async function getPurpurServerURLs() {
+    return null
+}
+
+// spigot
+async function getSpigotServerURLs() {
+    return null
+}
+
+// bukkit
+async function getBukkitServerURLs() {
+    return null
+}
+
+// forge
+async function getForgeServerURLs() {
+    return null
+}
+
+
 // testing
 getVanillaServerURLs().then(urls => {
     console.log("urls:", urls);
