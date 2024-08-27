@@ -1,4 +1,4 @@
-// getMinecraftVersions
+// get a list of minecraft versions
 function getMinecraftVersions() {
     return new Promise((resolve, reject) => {
         var mcversions = [];
@@ -23,9 +23,13 @@ function getMinecraftVersions() {
     });
 }
 
+
+
 minecraftversions = getMinecraftVersions()
 
-// getting scripts
+
+
+// server scripts
 // vanilla
 async function getVanillaServerURLs() {
     const vanillaServerURLs = [];
@@ -46,8 +50,6 @@ async function getVanillaServerURLs() {
     return vanillaServerURLs;
 }
 
-
-// future plans
 // paper
 async function getPaperServerURLs() {
     return null
@@ -74,37 +76,27 @@ async function getForgeServerURLs() {
 }
 
 
-// DATABASE STUFF!!!
-// ill use sqlite for now but will use a proper hosted DB in the future when everything is in containers :P
 
-// things to do:
-// - table for each server type, and table to store all the types
-//   - in each server type table, store the version and download url for each version
-
-// each hour, update the database with the latest versions of each server type by using the functions to fetch them
-// the database will be read by the frontend to display the latest versions of each server type
-
+// database setup
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('servers.db');
 
-
-// create all the tables (help idk what im doing i hate sql)
+// create all the tables
 db.serialize(() => {
     db.run('CREATE TABLE IF NOT EXISTS server_types (type TEXT PRIMARY KEY)');
     db.run('CREATE TABLE IF NOT EXISTS vanilla (version TEXT PRIMARY KEY, download_url TEXT)');
-    // db.run('CREATE TABLE IF NOT EXISTS paper (version TEXT PRIMARY KEY, download_url TEXT)');
-    // db.run('CREATE TABLE IF NOT EXISTS purpur (version TEXT PRIMARY KEY, download_url TEXT)');
-    // db.run('CREATE TABLE IF NOT EXISTS spigot (version TEXT PRIMARY KEY, download_url TEXT)');
-    // db.run('CREATE TABLE IF NOT EXISTS bukkit (version TEXT PRIMARY KEY, download_url TEXT)');
-    // db.run('CREATE TABLE IF NOT EXISTS forge (version TEXT PRIMARY KEY, download_url TEXT)');
+    // db.run('CREATE TABLE IF NOT EXISTS paper (version TEXT PRIMARY KEY, build TEXT, download_url TEXT)');
+    // db.run('CREATE TABLE IF NOT EXISTS purpur (version TEXT PRIMARY KEY, build TEXT, download_url TEXT)');
+    // db.run('CREATE TABLE IF NOT EXISTS spigot (version TEXT PRIMARY KEY, build TEXT, download_url TEXT)');
+    // db.run('CREATE TABLE IF NOT EXISTS bukkit (version TEXT PRIMARY KEY, build TEXT, download_url TEXT)');
+    // db.run('CREATE TABLE IF NOT EXISTS forge (version TEXT PRIMARY KEY, build TEXT, download_url TEXT)');
 });
-
-
 
 
 
 // main loop
 function updateDatabase() {
+    console.log('updating database');
     // start a transaction
     db.serialize(() => {
         db.run('BEGIN TRANSACTION');
@@ -117,15 +109,8 @@ function updateDatabase() {
     db.run('COMMIT');
 }
 
+// run innitally
+updateDatabase()
 
-// db.all('SELECT * FROM vanilla', [], (err, rows) => {
-//     if (err) {
-//         throw err;
-//     }
-//     rows.forEach((row) => {
-//         console.log(row);
-//     });
-// });
-
-// run the main loop once an hour (do you say an hour?? cause it has an o sound but idk)
+// run every hour
 setInterval(updateDatabase, 3600000)
