@@ -74,9 +74,29 @@ async function getForgeServerURLs() {
 }
 
 
-// testing
-getVanillaServerURLs().then(urls => {
-    console.log("urls:", urls);
+// DATABASE STUFF!!!
+// ill use sqlite for now but will use a proper hosted DB in the future when everything is in containers :P
+
+// things to do:
+// - table for each server type, and table to store all the types
+//   - in each server type table, store the version and download url for each version
+
+// each hour, update the database with the latest versions of each server type by using the functions to fetch them
+// the database will be read by the frontend to display the latest versions of each server type
+
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database('servers.db');
+
+
+// create all the tables (help idk what im doing i hate sql)
+db.serialize(() => {
+    db.run('CREATE TABLE IF NOT EXISTS server_types (type TEXT PRIMARY KEY)');
+    db.run('CREATE TABLE IF NOT EXISTS vanilla (version TEXT PRIMARY KEY, download_url TEXT)');
+    // db.run('CREATE TABLE IF NOT EXISTS paper (version TEXT PRIMARY KEY, download_url TEXT)');
+    // db.run('CREATE TABLE IF NOT EXISTS purpur (version TEXT PRIMARY KEY, download_url TEXT)');
+    // db.run('CREATE TABLE IF NOT EXISTS spigot (version TEXT PRIMARY KEY, download_url TEXT)');
+    // db.run('CREATE TABLE IF NOT EXISTS bukkit (version TEXT PRIMARY KEY, download_url TEXT)');
+    // db.run('CREATE TABLE IF NOT EXISTS forge (version TEXT PRIMARY KEY, download_url TEXT)');
 });
 
 
