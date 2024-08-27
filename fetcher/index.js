@@ -1,4 +1,3 @@
-
 // getMinecraftVersions
 function getMinecraftVersions() {
     return new Promise((resolve, reject) => {
@@ -12,8 +11,7 @@ function getMinecraftVersions() {
                 versions = data.versions;
                 versions.forEach(version => {
                     if (version.type === 'release') {
-                        console.log('got version ', version.id);
-                        mcversions.push(version.id.toString());
+                        mcversions.push({"version":version.id.toString(), "url":version.url.toString()}); // Add the version to the results
                     }
                 });
                 resolve(mcversions); // Resolve the promise with the results
@@ -25,21 +23,34 @@ function getMinecraftVersions() {
     });
 }
 
-// Call getVersions and handle the promise
-getMinecraftVersions().then(versions => {
-    console.log("versions:", versions);
-});
-
-
-mcversions = getMinecraftVersions();
+minecraftversions = getMinecraftVersions()
 
 // getting scripts
-
 // vanilla
+async function getVanillaServerURLs() {
+    const vanillaServerURLs = [];
+    const mcversions = await minecraftversions;
 
-function getVanillaServerURL(version) {
+    for (const version of mcversions) {
+        try {
 
+            const response = await fetch(version.url);
+            const data = await response.json();
+            vanillaServerURLs.push({"version": version.version, "downloadURL": data.downloads.server.url});
+
+        } catch (error) {
+            console.log(`error getting ${version.url}:`, error);
+        }
+    }
+
+    return vanillaServerURLs;
 }
+
+
+// testing
+getVanillaServerURLs().then(urls => {
+    console.log("urls:", urls);
+});
 
 
 
