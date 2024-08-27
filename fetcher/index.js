@@ -102,3 +102,19 @@ db.serialize(() => {
 
 
 
+
+// main loop
+function updateDatabase() {
+    // start a transaction
+    db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+        getVanillaServerURLs().then((vanillaServerURLs) => {
+            vanillaServerURLs.forEach((server) => {
+                db.run('INSERT OR REPLACE INTO vanilla (version, download_url) VALUES (?, ?)', [server.version, server.downloadURL]);
+            });
+        });
+    });
+    db.run('COMMIT');
+}
+
+setInterval(updateDatabase, 3600000)
