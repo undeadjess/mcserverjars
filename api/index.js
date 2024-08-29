@@ -33,65 +33,64 @@ app.get('/', (req, res) => {
 app.get('/api/servers/:server/:version/:build', (req, res) => {
     console.log('\nNew request to', req.path);
     const { server, version, build } = req.params;
-    res.json(getServerURLs(server, version, build));
+    getServerURL(server, version, build).then((data) => {
+        res.json(data);
+    });
 
 });
 
 app.get('/api/servers/:server/:version', (req, res) => {
     console.log('\nNew request to', req.path);
     const { server, version } = req.params;
-    res.json(getServerURL(server, version, null));
+    getServerURL(server, version, null).then((data) => {
+        res.json(data);
+    });
 });
 
 
 // get server URLs
 function getServerURL(server, version, build) {
-    // make sure valuse are valid to prevent sql injection
-    // server
-    if (!validServers.includes(server)) {
-        return { error: 'invalid server' };
-    }
-    // version
-    if (!version.match(/\d+\.\d+(\.\d+)?/)) {
-        return { error: 'invalid version' };
-    }
-    // build
-    if (build && !build.match(/\d+/)) {
-        return { error: 'invalid build' };
-    }
-
-
-    console.log('getting server urls for', server, version, build);
-    let query;
-    let params;
-    let download_url;
-    if (build) {
-        query = `SELECT download_url FROM ${server} WHERE version = ? AND build = ?`;
-        params = [version, build];
-    } else {
-        query = `SELECT download_url FROM ${server} WHERE version = ?`;
-        params = [version];
-    }
-    db.get(query, params, (err, row) => {
-        if (err) {
-            console.log('error getting server urls:', err);
-            reject(err);
-        } else {
-            console.log('got server urls:', row);
-            download_url = row;                                // PROBLEMMMM HERE (row is undefined cause its not defined yet because its async)
+    return new Promise((resolve, reject) => {
+        // Make sure values are valid to prevent SQL injection
+        // server
+        if (!validServers.includes(server)) {
+            return resolve({ error: 'invalid server' });
         }
+        // version
+        if (!version.match(/\d+\.\d+(\.\d+)?/)) {
+            return resolve({ error: 'invalid version' });
+        }
+        // build
+        if (build && !build.match(/\d+/)) {
+            return resolve({ error: 'invalid build' });
+        }
+
+        console.log('getting server urls for', server, version, build);
+        let query;
+        let params;
+        if (build) {
+            query = `SELECT download_url FROM ${server} WHERE version = ? AND build = ?`;
+            params = [version, build];
+        } else {
+            query = `SELECT download_url FROM ${server} WHERE version = ?`;
+            params = [version];
+        }
+
+        db.get(query, params, (err, row) => {
+            if (err) {
+                console.log('error getting server urls:', err);
+                return reject(err);
+            } else {
+                console.log('got server urls:', row);
+                resolve({
+                    server: server,
+                    version: version,
+                    build: build,
+                    downloadURL: row ? row.download_url : null
+                });
+            }
+        });
     });
-
-
-
-
-    console.log(download_url);
-    return {
-        server: server,
-        version: version,
-        build: build,
-        downloadURL: download_url
-    };
 }
 
 
