@@ -10,19 +10,41 @@
 // /api/servers/<server>/<version>/<build>  // returns the download url of the server version build
 
 
+const { json } = require('body-parser');
 const express = require('express');
 
 const app = express();
 const port = 8080;
 
 app.get('/', (req, res) => {
+    console.log('new request to /');
     res.send('serverjars api');
 });
 
-// when /api path is accessed
-app.get('/api', (req, res) => {
+// actual api stuff
+// with build specified
+app.get('/api/servers/:server/:version/:build', (req, res) => {
+    console.log('\nNew request to', req.path);
+    const { server, version, build } = req.params;
+    res.json(getServerURLs(server, version, build));
 
 });
+
+app.get('/api/servers/:server/:version', (req, res) => {
+    console.log('\nNew request to', req.path);
+    const { server, version } = req.params;
+    res.json(getServerURLs(server, version, null));
+});
+
+
+function getServerURLs(server, version, build) {
+    return {
+        server: server,
+        version: version,
+        build: build,
+    };
+}
+
 
 
 
