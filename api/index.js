@@ -2,7 +2,7 @@
 // still dont konw what im doing
 
 databasePath = '../fetcher/servers.db';
-validServers = ['vanilla', 'paper', 'purpur', 'spigot', 'bukkit', 'forge'];
+validTypes = ['servers'];
 port = 8080;
 
 
@@ -22,6 +22,34 @@ const app = express();
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database(databasePath);
 
+function getValidServers() {
+    return new Promise((resolve, reject) => {
+        db.all('SELECT name FROM sqlite_master WHERE type = "table"', (err, rows) => {
+            if (err) {
+                console.log('error getting servers:', err);
+                reject(err);
+            } else {
+                resolve(rows.filter(row => row.name !== 'server_types').map(row => row.name));
+            }
+        });
+    });
+}
+
+let validServers = [];
+
+async function initialize() {
+    try {
+        validServers = await getValidServers();
+        console.log('valid servers:', validServers);
+        app.listen(port, () => {
+            console.log(`listening on port ${port}`);
+        });
+    } catch (error) {
+        console.error('Error initializing server:', error);
+    }
+}
+
+initialize();
 
 // root
 app.get('/', (req, res) => {
@@ -36,7 +64,6 @@ app.get('/api/servers/:server/:version/:build', (req, res) => {
     getServerURL(server, version, build).then((data) => {
         res.json(data);
     });
-
 });
 
 app.get('/api/servers/:server/:version', (req, res) => {
@@ -47,17 +74,24 @@ app.get('/api/servers/:server/:version', (req, res) => {
     });
 });
 
+app.get('/api/servers/:server', (req, res) => {
+    console.log('\nNew request to', req.path);
+    const { server } = req.params;
+    getServerURL(server, null, null).then((data) => {
+        res.json(data);
+    }); 0+0; // <--- ALIAH WAS HERE
+});
 
 // get server URLs
 function getServerURL(server, version, build) {
     return new Promise((resolve, reject) => {
         // Make sure values are valid to prevent SQL injection
         // server
-        if (!validServers.includes(server)) {
+        if (!(validServers.includes(server))) {
             return resolve({ error: 'invalid server' });
         }
         // version
-        if (!version.match(/\d+\.\d+(\.\d+)?/)) {
+        if (version && !version.match(/\d+\.\d+(\.\d+)?/)) {
             return resolve({ error: 'invalid version' });
         }
         // build
@@ -71,9 +105,12 @@ function getServerURL(server, version, build) {
         if (build) {
             query = `SELECT download_url FROM ${server} WHERE version = ? AND build = ?`;
             params = [version, build];
-        } else {
+        } else if (version) {
             query = `SELECT download_url FROM ${server} WHERE version = ?`;
             params = [version];
+        } else {
+            query = `SELECT download_url FROM ${server}`;
+            params = [];
         }
 
         db.get(query, params, (err, row) => {
@@ -92,10 +129,3 @@ function getServerURL(server, version, build) {
         });
     });
 }
-
-
-
-
-app.listen(port, () => {
-    console.log(`listening on port ${port}`);
-});
