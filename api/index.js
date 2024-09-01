@@ -57,6 +57,12 @@ app.get('/', (req, res) => {
     res.send('serverjars api');
 });
 
+// /api/servers
+app.get('/api/servers', (req, res) => {
+    console.log('\nNew request to', req.path);
+    res.json(validServers);
+});
+
 // actual api stuff
 app.get('/api/servers/:server/:version/:build', (req, res) => {
     console.log('\nNew request to', req.path);
