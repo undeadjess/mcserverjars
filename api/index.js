@@ -119,6 +119,14 @@ function getServerURL(server, version, build) {
                 return reject(err);
             } else {
                 console.log('got server urls:', row);
+                // add version and build as latest if they dont exist -- IMPROVE THIS LATER!!!
+                if (!version) {
+                    version = "latest";
+                }
+                if (!build) {
+                    build = "latest";
+                }
+
                 resolve({
                     server: server,
                     version: version,
