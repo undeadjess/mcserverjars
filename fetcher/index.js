@@ -2,6 +2,17 @@ const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('servers.db');
 
 
+const dotenv = require("dotenv");
+dotenv.config();
+
+dbHost = process.env.DB_HOST;
+dbUser = process.env.DB_USER;
+dbPassword = process.env.DB_PASSWORD;
+dbName = process.env.DB_NAME;
+
+
+
+
 
 // get a list of minecraft versions
 function getMinecraftVersions() {

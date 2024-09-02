@@ -1,6 +1,21 @@
+const dotenv = require("dotenv");
+dotenv.config();
+
+// listen port
+port = process.env.LISTEN_PORT || 3000;
+
+// database info
+dbHost = process.env.DB_HOST;
+dbUser = process.env.DB_USER;
+dbPassword = process.env.DB_PASSWORD;
+dbName = process.env.DB_NAME;
+
+
+// temporary 
 databasePath = '../fetcher/servers.db';
 validTypes = ['servers'];
-port = 8080;
+
+
 
 const { json } = require('body-parser');
 const express = require('express');

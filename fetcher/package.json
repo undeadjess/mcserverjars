@@ -10,5 +10,8 @@
   "description": "",
   "dependencies": {
     "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5"
   }
 }
