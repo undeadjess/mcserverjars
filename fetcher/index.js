@@ -1,8 +1,13 @@
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database('servers.db');
+
+
+
 // get a list of minecraft versions
 function getMinecraftVersions() {
     return new Promise((resolve, reject) => {
         var mcversions = [];
-        console.log('getVersions running:');
+        console.log('getting minecraft versions');
         url = 'https://launchermeta.mojang.com/mc/game/version_manifest.json';
 
         fetch(url)
@@ -46,7 +51,6 @@ async function getVanillaServerURLs() {
             console.log(`error getting ${version.url}:`, error);
         }
     }
-
     return vanillaServerURLs;
 }
 
@@ -78,10 +82,6 @@ async function getForgeServerURLs() {
 
 
 // database setup
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('servers.db');
-
-// create all the tables
 db.serialize(() => {
     db.run('CREATE TABLE IF NOT EXISTS server_types (type TEXT PRIMARY KEY)');
     db.run('CREATE TABLE IF NOT EXISTS vanilla (version TEXT PRIMARY KEY, download_url TEXT)');
@@ -109,7 +109,9 @@ function updateDatabase() {
     db.run('COMMIT');
 }
 
-// run innitally
+
+
+// run initially
 updateDatabase()
 
 // run every hour
