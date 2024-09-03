@@ -3,7 +3,7 @@ const express = require('express');
 const app = express();
 var mysql = require('mysql'); 
 const dotenv = require("dotenv");
-dotenv.config();
+dotenv.config({ path: '../.env' });
 
 
 

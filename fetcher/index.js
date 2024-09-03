@@ -1,6 +1,7 @@
 var mysql = require('mysql'); 
 const dotenv = require("dotenv");
-dotenv.config();
+dotenv.config({ path: '../.env' });
+
 
 dbHost = process.env.DB_HOST;
 dbUser = process.env.DB_USER;
@@ -126,7 +127,7 @@ function updateDatabase() {
         if (err) throw err;
     });
 
-    
+
     getVanillaServerURLs().then((vanillaServerURLs) => {
         vanillaServerURLs.forEach((server) => {
             con.query('INSERT INTO vanilla (version, download_url) VALUES (?, ?) ON DUPLICATE KEY UPDATE download_url = ?', [server.version, server.downloadURL, server.downloadURL], function (err, result) {
