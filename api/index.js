@@ -1,43 +1,56 @@
+const { json } = require('body-parser');
+const express = require('express');
+const app = express();
+var mysql = require('mysql'); 
 const dotenv = require("dotenv");
 dotenv.config();
 
-// listen port
-port = process.env.LISTEN_PORT || 3000;
 
-// database info
+
+port = process.env.LISTEN_PORT || 3000;
 dbHost = process.env.DB_HOST;
 dbUser = process.env.DB_USER;
 dbPassword = process.env.DB_PASSWORD;
 dbName = process.env.DB_NAME;
 
 
-// temporary 
-databasePath = '../fetcher/servers.db';
-validTypes = ['servers'];
+
+// mysql connection
+var con = mysql.createConnection({
+    host: dbHost,
+    user: dbUser,
+    password: dbPassword,
+    database: dbName
+});
 
 
 
-const { json } = require('body-parser');
-const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
-const app = express();
-const db = new sqlite3.Database(databasePath);
+// get valid servers from database
 let validServers = [];
-
-
 
 function getValidServers() {
     return new Promise((resolve, reject) => {
-        db.all('SELECT name FROM sqlite_master WHERE type = "table"', (err, rows) => {
+        con.connect(function(err) {
             if (err) {
-                console.log('error getting servers:', err);
+                console.log('error connecting to mysql:', err);
                 reject(err);
             } else {
-                resolve(rows.filter(row => row.name !== 'server_types').map(row => row.name));
-            }
+                console.log('connected to mysql');
+                con.query('SELECT type FROM server_types', function (err, result) {
+                    if (err) {
+                        console.log('error getting servers:', err);
+                        reject(err);
+                    } else {
+                        console.log('got valid servers:', result);
+                        resolve(result.map(row => row.type));
+                    }
+                }
+            )};
         });
     });
 }
+
+
 
 async function initialize() {
     console.log('initializing server');
@@ -123,14 +136,12 @@ function getServerURL(server, version, build) {
             query = `SELECT download_url FROM ${server}`;
             params = [];
         }
-
-        // fetch data from database, and resolve promise with the result
-        db.get(query, params, (err, row) => {
+        con.query(query, params, function (err, result) {
             if (err) {
                 console.log('error getting server urls:', err);
                 return reject(err);
             } else {
-                console.log('got server urls:', row.download_url);
+                console.log('got server urls:', result[0].download_url);
 
                 // add version and build as latest if they don't exist -- IMPROVE THIS LATER!!!
                 if (!version) {
@@ -144,7 +155,7 @@ function getServerURL(server, version, build) {
                     server: server,
                     version: version,
                     build: build,
-                    downloadURL: row ? row.download_url : null
+                    downloadURL: result[0] ? result[0].download_url : null
                 });
             }
         });

@@ -10,7 +10,7 @@
   "description": "",
   "dependencies": {
     "express": "^4.19.2",
-    "sqlite3": "^5.1.7"
+    "mysql": "^2.18.1"
   },
   "devDependencies": {
     "dotenv": "^16.4.5"
