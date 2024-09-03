@@ -9,8 +9,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "mysql": "^2.18.1",
-    "sqlite3": "^5.1.7"
+    "mysql": "^2.18.1"
   },
   "devDependencies": {
     "dotenv": "^16.4.5"

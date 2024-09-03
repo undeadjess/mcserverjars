@@ -113,6 +113,20 @@ con.connect(function(err) {
 // main loop
 function updateDatabase() {
     console.log('updating database');
+
+
+    serverTypes = ['vanilla', 'paper', 'purpur', 'spigot', 'bukkit', 'forge'];
+    serverTypes.forEach((server) => {
+        con.query('INSERT INTO server_types (type) VALUES (?) ON DUPLICATE KEY UPDATE type = ?', [server, server], function (err, result) {
+            if (err) throw err;
+        });
+    });
+    // remove invalid servers
+    con.query('DELETE FROM vanilla WHERE version NOT IN (SELECT version FROM server_types)', function (err, result) {
+        if (err) throw err;
+    });
+
+    
     getVanillaServerURLs().then((vanillaServerURLs) => {
         vanillaServerURLs.forEach((server) => {
             con.query('INSERT INTO vanilla (version, download_url) VALUES (?, ?) ON DUPLICATE KEY UPDATE download_url = ?', [server.version, server.downloadURL, server.downloadURL], function (err, result) {
