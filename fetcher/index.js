@@ -1,7 +1,4 @@
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('servers.db');
-
-
+var mysql = require('mysql'); 
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -9,8 +6,6 @@ dbHost = process.env.DB_HOST;
 dbUser = process.env.DB_USER;
 dbPassword = process.env.DB_PASSWORD;
 dbName = process.env.DB_NAME;
-
-
 
 
 
@@ -93,14 +88,24 @@ async function getForgeServerURLs() {
 
 
 // database setup
-db.serialize(() => {
-    db.run('CREATE TABLE IF NOT EXISTS server_types (type TEXT PRIMARY KEY)');
-    db.run('CREATE TABLE IF NOT EXISTS vanilla (version TEXT PRIMARY KEY, download_url TEXT)');
-    // db.run('CREATE TABLE IF NOT EXISTS paper (version TEXT PRIMARY KEY, build TEXT, download_url TEXT)');
-    // db.run('CREATE TABLE IF NOT EXISTS purpur (version TEXT PRIMARY KEY, build TEXT, download_url TEXT)');
-    // db.run('CREATE TABLE IF NOT EXISTS spigot (version TEXT PRIMARY KEY, build TEXT, download_url TEXT)');
-    // db.run('CREATE TABLE IF NOT EXISTS bukkit (version TEXT PRIMARY KEY, build TEXT, download_url TEXT)');
-    // db.run('CREATE TABLE IF NOT EXISTS forge (version TEXT PRIMARY KEY, build TEXT, download_url TEXT)');
+var con = mysql.createConnection({
+    host: dbHost,
+    user: dbUser,
+    password: dbPassword,
+    database: dbName
+});
+
+con.connect(function(err) {
+    if (err) throw err;
+    console.log("Connected!");
+    con.query("CREATE TABLE IF NOT EXISTS server_types (type VARCHAR(255) PRIMARY KEY)", function (err, result) {
+        if (err) throw err;
+        console.log("server_types table created");
+    });
+    con.query("CREATE TABLE IF NOT EXISTS vanilla (version VARCHAR(255) PRIMARY KEY, download_url TEXT)", function (err, result) {
+        if (err) throw err;
+        console.log("vanilla table created");
+    });
 });
 
 
@@ -108,16 +113,13 @@ db.serialize(() => {
 // main loop
 function updateDatabase() {
     console.log('updating database');
-    // start a transaction
-    db.serialize(() => {
-        db.run('BEGIN TRANSACTION');
-        getVanillaServerURLs().then((vanillaServerURLs) => {
-            vanillaServerURLs.forEach((server) => {
-                db.run('INSERT OR REPLACE INTO vanilla (version, download_url) VALUES (?, ?)', [server.version, server.downloadURL]);
+    getVanillaServerURLs().then((vanillaServerURLs) => {
+        vanillaServerURLs.forEach((server) => {
+            con.query('INSERT INTO vanilla (version, download_url) VALUES (?, ?) ON DUPLICATE KEY UPDATE download_url = ?', [server.version, server.downloadURL, server.downloadURL], function (err, result) {
+                if (err) throw err;
             });
         });
     });
-    db.run('COMMIT');
 }
 
 
