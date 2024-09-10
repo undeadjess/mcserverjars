@@ -1,12 +1,12 @@
-var mysql = require('mysql'); 
-const dotenv = require("dotenv");
-dotenv.config({ path: '../.env' });
+const mysql = require('mysql');
+// const dotenv = require('dotenv');
+// dotenv.config({ path: '../.env' });
 
+const dbHost = process.env.DB_HOST;
+const dbUser = process.env.DB_USER;
+const dbPassword = process.env.DB_PASSWORD;
+const dbName = process.env.DB_NAME;
 
-dbHost = process.env.DB_HOST;
-dbUser = process.env.DB_USER;
-dbPassword = process.env.DB_PASSWORD;
-dbName = process.env.DB_NAME;
 
 
 

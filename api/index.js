@@ -1,17 +1,15 @@
 const { json } = require('body-parser');
 const express = require('express');
 const app = express();
-var mysql = require('mysql'); 
-const dotenv = require("dotenv");
-dotenv.config({ path: '../.env' });
+const mysql = require('mysql'); 
 
 
 
-port = process.env.LISTEN_PORT || 3000;
-dbHost = process.env.DB_HOST;
-dbUser = process.env.DB_USER;
-dbPassword = process.env.DB_PASSWORD;
-dbName = process.env.DB_NAME;
+const port = process.env.LISTEN_PORT || 3000;
+const dbHost = process.env.DB_HOST;
+const dbUser = process.env.DB_USER;
+const dbPassword = process.env.DB_PASSWORD;
+const dbName = process.env.DB_NAME;
 
 
 
