@@ -69,7 +69,26 @@ async function getPaperServerURLs() {
 
 // purpur
 async function getPurpurServerURLs() {
-    return null
+    const purpurServerURLs = [];
+    const purpurURL = "https://api.purpurmc.org/v2/purpur";
+    const response = await fetch(purpurURL);
+    const data = await response.json();
+    purpurVersions = data.versions;
+
+    for (const version of purpurVersions) {
+        console.log("getting version ", version);
+        const fetchedBuilds = await fetch(`https://api.purpurmc.org/v2/purpur/${version}`);
+        const builds = (await fetchedBuilds.json()).builds.all;
+        
+        buildsData = [];
+        for (const build of builds) {
+            buildNumber = build;
+            buildsData.push({"build": buildNumber, "downloadURL": `https://api.purpurmc.org/v2/purpur/${version}/${buildNumber}/download`});
+        }
+        // console.log(buildsData);
+        purpurServerURLs.push({"version": version, "builds": buildsData});
+    }
+    return purpurServerURLs;
 }
 
 // spigot
