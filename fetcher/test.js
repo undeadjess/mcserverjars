@@ -45,7 +45,26 @@ async function getVanillaServerURLs() {
 
 // paper
 async function getPaperServerURLs() {
-    return null
+    // data structure: {version: "1.16.4", builds: [{build: 1, downloadURL: "something"}, {build: 2, downloadURL: "somethingelse"}]}
+    const paperServerURLs = [];
+    const paperURL = "https://api.papermc.io/v2/projects/paper";
+    const response = await fetch(paperURL);
+    const data = await response.json();
+    console.log("got https://api.papermc.io/v2/projects/paper: ", data)
+
+    for (const version of data.versions) {
+        console.log("getting version ", version);
+        const fetchedBuilds = await fetch(`https://api.papermc.io/v2/projects/paper/versions/${version}`);
+        const builds = (await fetchedBuilds.json()).builds;
+        
+        buildsData = [];
+        for (const build of builds) {
+            buildNumber = build;
+            buildsData.push({"build": buildNumber, "downloadURL": `https://api.papermc.io/v2/projects/paper/versions/${version}/builds/${buildNumber}/downloads/paper-${version}-${buildNumber}.jar`});
+        }
+        paperServerURLs.push({"version": version, "builds": buildsData});
+    }
+    return paperServerURLs;
 }
 
 // purpur
