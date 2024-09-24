@@ -107,11 +107,14 @@ con.connect(function(err) {
         if (err) throw err;
         console.log("vanilla table created");
     });
+    // run initially
+    updateDatabase()
+    // run every hour
+    setInterval(updateDatabase, 3600000)
 });
 
 
 
-// main loop
 function updateDatabase() {
     console.log('updating database');
 
@@ -139,8 +142,3 @@ function updateDatabase() {
 
 
 
-// run initially
-updateDatabase()
-
-// run every hour
-setInterval(updateDatabase, 3600000)
