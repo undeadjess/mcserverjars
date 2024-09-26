@@ -2,9 +2,11 @@ version: '3.8'
 
 services:
   fetcher:
-    build:
-      context: .
-      dockerfile: fetcher/Dockerfile
+    # Uncomment the following lines to build the image yourself
+    # build:
+    #   context: .
+    #   dockerfile: fetcher/Dockerfile
+    image: undeadjess/mcserverjars-fetcher:latest
     environment:
       DB_HOST: db
       DB_USER: root
@@ -14,9 +16,11 @@ services:
       - db
 
   api:
-    build:
-      context: .
-      dockerfile: api/Dockerfile
+    # Uncomment the following lines to build the image yourself
+    # build:
+    #   context: .
+    #   dockerfile: api/Dockerfile
+    image: undeadjess/mcserverjars-api:latest
     ports:
       - "3002:3002"
     environment:
@@ -35,3 +39,14 @@ services:
       MYSQL_DATABASE: mcserverjars
     ports:
       - "3306:3306"
+
+  # optional: phpmyadmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: ExamplePassword-PleaseChange
+    ports:
+      - "3003:80"
+    depends_on:
+      - db
