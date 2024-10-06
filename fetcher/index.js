@@ -45,20 +45,25 @@ minecraftversions = getMinecraftVersions()
 // vanilla
 async function getVanillaServerURLs() {
     const vanillaServerURLs = [];
+    console.log('[getVanillaServerURLs] Fetching Vanilla Server URLs');
     const mcversions = await minecraftversions;
 
-    for (const version of mcversions) {
+    const fetchPromises = mcversions.map(async (version) => {
         try {
-
             const response = await fetch(version.url);
             const data = await response.json();
-            vanillaServerURLs.push({"version": version.version, "downloadURL": data.downloads.server.url});
-
+            return { version: version.version, downloadURL: data.downloads.server.url };
         } catch (error) {
-            console.log(`error getting ${version.url}:`, error);
+            console.log(`[getVanillaServerURLs] error getting ${version.url}:`, error);
+            return null; 
         }
-    }
-    return vanillaServerURLs;
+    });
+
+    const results = await Promise.all(fetchPromises);
+    const validResults = results.filter(result => result !== null);
+    
+    console.log('[getVanillaServerURLs] Finished Fetching Vanilla Server URLs');
+    return validResults;
 }
 
 // paper
