@@ -1,25 +1,16 @@
-const mysql = require('mysql');
-// const dotenv = require('dotenv');
-// dotenv.config({ path: '../.env' });
-
-// live
-// const port = process.env.LISTEN_PORT || 3000;
-// const dbHost = process.env.DB_HOST;
-// const dbUser = process.env.DB_USER;
-// const dbPassword = process.env.DB_PASSWORD;
-// const dbName = process.env.DB_NAME;
-
-// testing
-const port = 3000;
-const dbHost = "192.168.50.2";
-const dbUser = "root";
-const dbPassword = "ExamplePassword-PleaseChange";
-const dbName = "mcserverjars";
+const mysql = require('mysql2/promise');
 
 
 
-// database setup
-var con = mysql.createConnection({
+const dbHost = process.env.DB_HOST;
+const dbUser = process.env.DB_USER;
+const dbPassword = process.env.DB_PASSWORD;
+const dbName = process.env.DB_NAME;
+
+
+
+const pool = mysql.createPool({
+    connectionLimit: 10, // i dont actually know how many it will use but 10 seems safe lol
     host: dbHost,
     user: dbUser,
     password: dbPassword,
@@ -28,7 +19,8 @@ var con = mysql.createConnection({
 
 
 
-const serverTypes = ["vanilla", "paper", "purpur", "spigot", "bukkit", "forge", "fabric"];
+// const serverTypes = ["vanilla", "paper", "purpur", "spigot", "bukkit", "forge", "fabric"];
+const serverTypes = ["vanilla", "paper", "purpur", "fabric"]; // actually working server types - initializeDatabase() will create tables for these types
 
 
 
@@ -280,53 +272,115 @@ async function getFabricServerURLs() {
 
 
 
-function updateDatabase() {
-    console.log('[main] updating database');
+async function updateDatabase() {
+    console.log('[updateDatabase] updating database');
 
-    serverTypes.forEach((server) => {
-        con.query('INSERT INTO server_types (type) VALUES (?) ON DUPLICATE KEY UPDATE type = ?', [server, server], function (err, result) {
-            if (err) throw err;
-        });
-    });
-    // remove invalid servers
-    con.query('DELETE FROM vanilla WHERE version NOT IN (SELECT version FROM server_types)', function (err, result) {
-        if (err) throw err;
-    });
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // batch insert for server types
+        let serverTypeQueries = serverTypes.map(server => [server]);
+        if (serverTypeQueries.length > 0) {
+            await connection.query('INSERT INTO server_types (type) VALUES ? ON DUPLICATE KEY UPDATE type = type', [serverTypeQueries]);
+        }
 
 
-    getVanillaServerURLs().then((vanillaServerURLs) => {
-        vanillaServerURLs.forEach((server) => {
-            con.query('INSERT INTO vanilla (version, download_url) VALUES (?, ?) ON DUPLICATE KEY UPDATE download_url = ?', [server.version, server.downloadURL, server.downloadURL], function (err, result) {
-                if (err) throw err;
+
+        // add all the urls and builds for all the different server types
+        // vanilla - has no builds
+        const vanillaServerURLs = await getVanillaServerURLs();
+        let vanillaQueries = vanillaServerURLs.map(server => [server.version, server.downloadURL]);
+        if (vanillaQueries.length > 0) {
+            await connection.query('INSERT INTO vanilla (version, download_url) VALUES ? ON DUPLICATE KEY UPDATE download_url = VALUES(download_url)', [vanillaQueries]);
+        }
+
+        // Paper servers with builds
+        const paperServerURLs = await getPaperServerURLs();
+        let paperQueries = [];
+        paperServerURLs.forEach(server => {
+            server.builds.forEach(build => {
+                paperQueries.push([server.version, build.build, build.downloadURL]);
             });
         });
-    });
 
-    console.log('[main] database updated');
+        // check that there wernt any problems
+        if (paperQueries.length > 0) {
+            await connection.query('INSERT INTO paper (version, build, download_url) VALUES ? ON DUPLICATE KEY UPDATE download_url = VALUES(download_url)', [paperQueries]);
+        }
+
+        // Purpur servers with builds
+        const purpurServerURLs = await getPurpurServerURLs();
+        let purpurQueries = [];
+        purpurServerURLs.forEach(server => {
+            server.builds.forEach(build => {
+                purpurQueries.push([server.version, build.build, build.downloadURL]);
+            });
+        });
+
+        if (purpurQueries.length > 0) {
+            await connection.query('INSERT INTO purpur (version, build, download_url) VALUES ? ON DUPLICATE KEY UPDATE download_url = VALUES(download_url)', [purpurQueries]);
+        }
+
+        // Fabric servers with builds
+        const fabricServerURLs = await getFabricServerURLs();
+        let fabricQueries = [];
+        fabricServerURLs.forEach(server => {
+            server.builds.forEach(build => {
+                fabricQueries.push([server.version, build.build, build.downloadURL]);
+            });
+        });
+
+        if (fabricQueries.length > 0) {
+            await connection.query('INSERT INTO fabric (version, build, download_url) VALUES ? ON DUPLICATE KEY UPDATE download_url = VALUES(download_url)', [fabricQueries]);
+        }
+
+        // commit the transaction to make it :sparkles: *official* :sparkles:
+        await connection.commit();
+        console.log('[updateDatabase] Transaction Complete.');
+    } catch (err) {
+        await connection.rollback();
+        console.error('[updateDatabase] Transaction Failed:', err);
+    } finally {
+        connection.release();
+    }
 }
 
 
 
-con.connect(function(err) {
-    if (err) throw err;
-    console.log("[database] Connected!");
+async function initializeDatabase() {
+    const connection = await pool.getConnection();
+    try {
+        console.log("[initializeDatabase] Connected!");
 
-    // create server_types table
-    con.query("CREATE TABLE IF NOT EXISTS server_types (type VARCHAR(255) PRIMARY KEY)", function (err, result) {
-        if (err) throw err;
-        console.log("[database] server_types table created");
-    });
+        await connection.query("CREATE TABLE IF NOT EXISTS server_types (type VARCHAR(255) PRIMARY KEY)");
+        console.log("[initializeDatabase] server_types table created");
 
-    // create tables for each server type
-    serverTypes.forEach((server) => {
-        con.query(`CREATE TABLE IF NOT EXISTS ${server} (version VARCHAR(255) PRIMARY KEY, download_url TEXT)`, function (err, result) {
-            if (err) throw err;
-            console.log(`[database] ${server} table created`);
-        });
-    });
+        // make tables for each server type
+        for (const server of serverTypes) {
+            await connection.query(`CREATE TABLE IF NOT EXISTS ${server} (
+                version VARCHAR(255) NOT NULL,
+                build VARCHAR(255) NOT NULL DEFAULT '0',
+                download_url TEXT,
+                PRIMARY KEY (version, build),
+                INDEX (version)
+            )`);
+            console.log(`[initializeDatabase] ${server} table created`);
+        }
+    } catch (err) {
+        console.error('[initializeDatabase] Error:', err);
+    } finally {
+        connection.release();
+    }
+}
 
-    // run initially
-    updateDatabase()
-    // run every hour
-    setInterval(updateDatabase, 3600000)
-});
+
+
+// run everything once, and  every hour
+async function main() {
+    await initializeDatabase();
+    await updateDatabase();
+    setInterval(updateDatabase, 3600000); // 3600000 = 1 hour
+}
+
+main();
