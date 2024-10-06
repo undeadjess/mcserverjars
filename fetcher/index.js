@@ -18,6 +18,19 @@ const dbName = "mcserverjars";
 
 
 
+// database setup
+var con = mysql.createConnection({
+    host: dbHost,
+    user: dbUser,
+    password: dbPassword,
+    database: dbName
+});
+
+
+
+const serverTypes = ["vanilla", "paper", "purpur", "spigot", "bukkit", "forge", "fabric"];
+
+
 
 // get a list of minecraft versions
 function getMinecraftVersions() {
@@ -46,8 +59,6 @@ function getMinecraftVersions() {
             });
     });
 }
-
-
 
 minecraftversions = getMinecraftVersions()
 
@@ -166,7 +177,6 @@ async function getForgeServerURLs() {
     return null
 }
 
-
 // fabric
 async function getFabricServerURLs() {
     // https://meta.fabricmc.net/v2/versions/loader/1.21.1/0.16.5/1.0.1/server/jar
@@ -270,37 +280,9 @@ async function getFabricServerURLs() {
 
 
 
-// database setup
-var con = mysql.createConnection({
-    host: dbHost,
-    user: dbUser,
-    password: dbPassword,
-    database: dbName
-});
-
-con.connect(function(err) {
-    if (err) throw err;
-    console.log("[database] Connected!");
-    con.query("CREATE TABLE IF NOT EXISTS server_types (type VARCHAR(255) PRIMARY KEY)", function (err, result) {
-        if (err) throw err;
-        console.log("[database] server_types table created");
-    });
-    con.query("CREATE TABLE IF NOT EXISTS vanilla (version VARCHAR(255) PRIMARY KEY, download_url TEXT)", function (err, result) {
-        if (err) throw err;
-        console.log("[database] vanilla table created");
-    });
-    // run initially
-    updateDatabase()
-    // run every hour
-    setInterval(updateDatabase, 3600000)
-});
-
-
-
 function updateDatabase() {
     console.log('[main] updating database');
 
-    serverTypes = ['vanilla', 'paper', 'purpur', 'spigot', 'bukkit', 'forge'];
     serverTypes.forEach((server) => {
         con.query('INSERT INTO server_types (type) VALUES (?) ON DUPLICATE KEY UPDATE type = ?', [server, server], function (err, result) {
             if (err) throw err;
@@ -325,3 +307,26 @@ function updateDatabase() {
 
 
 
+con.connect(function(err) {
+    if (err) throw err;
+    console.log("[database] Connected!");
+
+    // create server_types table
+    con.query("CREATE TABLE IF NOT EXISTS server_types (type VARCHAR(255) PRIMARY KEY)", function (err, result) {
+        if (err) throw err;
+        console.log("[database] server_types table created");
+    });
+
+    // create tables for each server type
+    serverTypes.forEach((server) => {
+        con.query(`CREATE TABLE IF NOT EXISTS ${server} (version VARCHAR(255) PRIMARY KEY, download_url TEXT)`, function (err, result) {
+            if (err) throw err;
+            console.log(`[database] ${server} table created`);
+        });
+    });
+
+    // run initially
+    updateDatabase()
+    // run every hour
+    setInterval(updateDatabase, 3600000)
+});
