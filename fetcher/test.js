@@ -80,23 +80,33 @@ async function getPaperServerURLs() {
 async function getPurpurServerURLs() {
     const purpurServerURLs = [];
     const purpurURL = "https://api.purpurmc.org/v2/purpur";
-    const response = await fetch(purpurURL);
-    const data = await response.json();
-    purpurVersions = data.versions;
+    console.log('[getPurpurServerURLs] Fetching Purpur Server URLs');
 
-    for (const version of purpurVersions) {
-        console.log("getting version ", version);
-        const fetchedBuilds = await fetch(`https://api.purpurmc.org/v2/purpur/${version}`);
-        const builds = (await fetchedBuilds.json()).builds.all;
-        
-        buildsData = [];
-        for (const build of builds) {
-            buildNumber = build;
-            buildsData.push({"build": buildNumber, "downloadURL": `https://api.purpurmc.org/v2/purpur/${version}/${buildNumber}/download`});
-        }
-        // console.log(buildsData);
-        purpurServerURLs.push({"version": version, "builds": buildsData});
+    try {
+        const response = await fetch(purpurURL);
+        const data = await response.json();
+        const purpurVersions = data.versions;
+
+        const fetchPromises = purpurVersions.map(async (version) => {
+            const fetchedBuilds = await fetch(`https://api.purpurmc.org/v2/purpur/${version}`);
+            const builds = (await fetchedBuilds.json()).builds.all;
+
+            const buildsData = builds.map(buildNumber => ({
+                build: buildNumber,
+                downloadURL: `https://api.purpurmc.org/v2/purpur/${version}/${buildNumber}/download`
+            }));
+
+            return { version: version, builds: buildsData };
+        });
+
+        const results = await Promise.all(fetchPromises);
+        purpurServerURLs.push(...results);
+
+        console.log('[getPaperServerURLs] Finished Fetching Paper Server URLs');
+    } catch (error) {
+        console.error('[getPaperServerURLs] Error: ', error);
     }
+
     return purpurServerURLs;
 }
 
