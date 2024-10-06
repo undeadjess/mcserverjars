@@ -48,22 +48,31 @@ async function getPaperServerURLs() {
     // data structure: {version: "1.16.4", builds: [{build: 1, downloadURL: "something"}, {build: 2, downloadURL: "somethingelse"}]}
     const paperServerURLs = [];
     const paperURL = "https://api.papermc.io/v2/projects/paper";
-    const response = await fetch(paperURL);
-    const data = await response.json();
-    console.log("got https://api.papermc.io/v2/projects/paper: ", data)
+    console.log('[getPaperServerURLs] Fetching Paper Server URLs');
 
-    for (const version of data.versions) {
-        console.log("getting version ", version);
-        const fetchedBuilds = await fetch(`https://api.papermc.io/v2/projects/paper/versions/${version}`);
-        const builds = (await fetchedBuilds.json()).builds;
-        
-        buildsData = [];
-        for (const build of builds) {
-            buildNumber = build;
-            buildsData.push({"build": buildNumber, "downloadURL": `https://api.papermc.io/v2/projects/paper/versions/${version}/builds/${buildNumber}/downloads/paper-${version}-${buildNumber}.jar`});
-        }
-        paperServerURLs.push({"version": version, "builds": buildsData});
+    try {
+        const response = await fetch(paperURL);
+        const data = await response.json();
+        const fetchPromises = data.versions.map(async (version) => {
+            const fetchedBuilds = await fetch(`https://api.papermc.io/v2/projects/paper/versions/${version}`);
+            const builds = (await fetchedBuilds.json()).builds;
+
+            const buildsData = builds.map(build => ({
+                build: build,
+                downloadURL: `https://api.papermc.io/v2/projects/paper/versions/${version}/builds/${build}/downloads/paper-${version}-${build}.jar`
+            }));
+
+            return { version: version, builds: buildsData };
+        });
+
+        const results = await Promise.all(fetchPromises);
+        paperServerURLs.push(...results);
+
+        console.log('[getPaperServerURLs] Finished Fetching Paper Server URLs');
+    } catch (error) {
+        console.error('[getPaperServerURLs] Error: ', error);
     }
+
     return paperServerURLs;
 }
 
