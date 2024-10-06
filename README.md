@@ -24,3 +24,8 @@ Returns the download link for the latest build of the latest version of the pape
 - Add support for proxys (velocity, bungeecord, geyser...)
 - Add support for more server jars (only vanilla is supported at this time)
 - move to docker
+- add caching - build jars and store them in a cache
+
+#### FAQ:
+ - Why did i decide to build a database of links to server jars instead of generating the links or fetching them on the fly?
+   - Good question..... mostly because im an idiot, kinda because i wanted to learn how to use sql, but i think ill just say its because i want to build and cache them in the future.
