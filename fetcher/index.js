@@ -14,7 +14,7 @@ const dbName = process.env.DB_NAME;
 function getMinecraftVersions() {
     return new Promise((resolve, reject) => {
         var mcversions = [];
-        console.log('getting minecraft versions');
+        console.log('[getMinecraftVersions] Fetching minecraft versions');
         url = 'https://launchermeta.mojang.com/mc/game/version_manifest.json';
 
         fetch(url)
@@ -27,9 +27,12 @@ function getMinecraftVersions() {
                     }
                 });
                 resolve(mcversions); // Resolve the promise with the results
+            }).then(() => {
+                console.log('[getMinecraftVersions] Finished Fetching Minecraft Versions');
+
             })
             .catch(error => {
-                console.log('error:', error);
+                console.log('[getMinecraftVersions] error:', error);
                 resolve(mcversions); // Resolve the promise even if there's an error
             });
     });
@@ -52,6 +55,7 @@ async function getVanillaServerURLs() {
         try {
             const response = await fetch(version.url);
             const data = await response.json();
+            // TODO - do something about the error for minecraft versions with no multiplayer server jar
             return { version: version.version, downloadURL: data.downloads.server.url };
         } catch (error) {
             console.log(`[getVanillaServerURLs] error getting ${version.url}:`, error);
@@ -103,14 +107,14 @@ var con = mysql.createConnection({
 
 con.connect(function(err) {
     if (err) throw err;
-    console.log("Connected!");
+    console.log("[database] Connected!");
     con.query("CREATE TABLE IF NOT EXISTS server_types (type VARCHAR(255) PRIMARY KEY)", function (err, result) {
         if (err) throw err;
-        console.log("server_types table created");
+        console.log("[database] server_types table created");
     });
     con.query("CREATE TABLE IF NOT EXISTS vanilla (version VARCHAR(255) PRIMARY KEY, download_url TEXT)", function (err, result) {
         if (err) throw err;
-        console.log("vanilla table created");
+        console.log("[database] vanilla table created");
     });
     // run initially
     updateDatabase()
@@ -121,8 +125,7 @@ con.connect(function(err) {
 
 
 function updateDatabase() {
-    console.log('updating database');
-
+    console.log('[main] updating database');
 
     serverTypes = ['vanilla', 'paper', 'purpur', 'spigot', 'bukkit', 'forge'];
     serverTypes.forEach((server) => {
@@ -143,6 +146,8 @@ function updateDatabase() {
             });
         });
     });
+
+    console.log('[main] database updated');
 }
 
 
