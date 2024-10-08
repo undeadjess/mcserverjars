@@ -84,27 +84,15 @@ app.get('/servers', (req, res) => {
     res.json(validServers);
 });
 
-app.get('/servers/:server', (req, res) => {
-    console.log('[routes] New request to', req.path, " from IP address:", req.ip);
-    const { server } = req.params;
-    getServerURL(server, null, null).then((data) => {
-        res.json(data);
-    });
-});
-
-app.get('/servers/:server/:version', (req, res) => {
-    console.log('[routes] New request to', req.path, " from IP address:", req.ip);
-    const { server, version } = req.params;
-    getServerURL(server, version, null).then((data) => {
-        res.json(data);
-    });
-});
-
-app.get('/servers/:server/:version/:build', (req, res) => {
+app.get('/servers/:server/:version?/:build?', (req, res) => {
     console.log('[routes] New request to', req.path, " from IP address:", req.ip);
     const { server, version, build } = req.params;
-    getServerURL(server, version, build).then((data) => {
+    
+    getServerURL(server, version || null, build || null).then((data) => {
         res.json(data);
+    }).catch(err => {
+        console.error('[routes] Error fetching server URL:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
     });
 });
 
