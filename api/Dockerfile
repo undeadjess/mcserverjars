@@ -3,11 +3,10 @@ FROM node:18
 
 WORKDIR /usr/src/app
 
-COPY api/package*.json ./
+COPY package*.json ./
+COPY index.js ./
 
 RUN npm install
-
-COPY api ./
 
 EXPOSE 3002
 

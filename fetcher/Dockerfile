@@ -3,11 +3,10 @@ FROM node:18
 
 WORKDIR /usr/src/app
 
-COPY fetcher/package*.json ./
+COPY package*.json ./
+COPY index.js ./
 
 RUN npm install
-
-COPY fetcher ./
 
 EXPOSE 3001
 
