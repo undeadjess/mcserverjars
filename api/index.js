@@ -124,7 +124,21 @@ function getServerURL(server, version, build) {
             query = `SELECT download_url FROM ${server} WHERE version = ?`;
             params = [version];
         } else {
-            query = `SELECT download_url FROM ${server}`;
+            // select the latest version and build - sort by version and build, but treat them as unsigned integers so that they sort correctly (oww my brain hurtssss from making this)
+            query = `
+                SELECT download_url 
+                FROM ${server} 
+                WHERE version = (
+                    SELECT version 
+                    FROM ${server} 
+                    ORDER BY CAST(SUBSTRING_INDEX(version, '.', 1) AS UNSIGNED) DESC,
+                             CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(version, '.', -2), '.', 1) AS UNSIGNED) DESC,
+                             CAST(SUBSTRING_INDEX(version, '.', -1) AS UNSIGNED) DESC 
+                    LIMIT 1
+                ) 
+                ORDER BY CAST(build AS UNSIGNED) DESC 
+                LIMIT 1
+            `;
             params = [];
         }
         con.query(query, params, function (err, result) {
