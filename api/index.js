@@ -75,38 +75,33 @@ initialize();
 
 // routes
 app.get('/', (req, res) => {
-    console.log('\nNew request to', req.path, " from IP address:", req.ip);
-    res.send('MCServerJars api');
+    console.log('[routes] New request to', req.path, " from IP address:", req.ip);
+    res.json({"types": ["servers", "proxys"]});
 });
 
-app.get('/api', (req, res) => {
-    console.log('\nNew request to', req.path, " from IP address:", req.ip);
-    res.send(json({"types": ["servers", "proxys"]}));
-});
-
-app.get('/api/servers', (req, res) => {
-    console.log('\nNew request to', req.path, " from IP address:", req.ip);
+app.get('/servers', (req, res) => {
+    console.log('[routes] New request to', req.path, " from IP address:", req.ip);
     res.json(validServers);
 });
 
-app.get('/api/servers/:server', (req, res) => {
-    console.log('\nNew request to', req.path, " from IP address:", req.ip);
+app.get('/servers/:server', (req, res) => {
+    console.log('[routes] New request to', req.path, " from IP address:", req.ip);
     const { server } = req.params;
     getServerURL(server, null, null).then((data) => {
         res.json(data);
     });
 });
 
-app.get('/api/servers/:server/:version', (req, res) => {
-    console.log('\nNew request to', req.path, " from IP address:", req.ip);
+app.get('/servers/:server/:version', (req, res) => {
+    console.log('[routes] New request to', req.path, " from IP address:", req.ip);
     const { server, version } = req.params;
     getServerURL(server, version, null).then((data) => {
         res.json(data);
     });
 });
 
-app.get('/api/servers/:server/:version/:build', (req, res) => {
-    console.log('\nNew request to', req.path, " from IP address:", req.ip);
+app.get('/servers/:server/:version/:build', (req, res) => {
+    console.log('[routes] New request to', req.path, " from IP address:", req.ip);
     const { server, version, build } = req.params;
     getServerURL(server, version, build).then((data) => {
         res.json(data);
