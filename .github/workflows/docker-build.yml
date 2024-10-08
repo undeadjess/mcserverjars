@@ -22,7 +22,7 @@ jobs:
     - name: Build and push fetcher image
       uses: docker/build-push-action@v5
       with:
-        context: ./
+        context: ./fetcher/
         file: ./fetcher/Dockerfile
         push: true
         tags: undeadjess/mcserverjars-fetcher:latest
@@ -30,7 +30,7 @@ jobs:
     - name: Build and push api image
       uses: docker/build-push-action@v5
       with:
-        context: ./
+        context: ./api/
         file: ./api/Dockerfile
         push: true
         tags: undeadjess/mcserverjars-api:latest
