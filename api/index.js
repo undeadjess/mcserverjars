@@ -59,13 +59,13 @@ async function initialize() {
     console.log('[initialize] initializing server');
     try {
         validServers = await getValidServers();
-        console.log('fetched latest valid servers:', validServers);
+        console.log('[initialize] using fetched servers:', validServers);
         app.listen(port, () => {
-            console.log(`server listening on port ${port}`);
+            console.log(`[initialize] server listening on port ${port}`);
         });
-        console.log('server initialized');
+        console.log('[initialize] server initialized');
     } catch (error) {
-        console.error('Error initializing server:', error);
+        console.error('[initialize] Error initializing server:', error);
     }
 }
 
@@ -126,7 +126,7 @@ function getServerURL(server, version, build) {
         }
 
         // set query and params based on input
-        console.log('getting server urls for', server, version, build);
+        console.log('[getServerURL] getting server urls for', server, version, build);
         let query;
         let params;
         if (build) {
@@ -141,10 +141,10 @@ function getServerURL(server, version, build) {
         }
         con.query(query, params, function (err, result) {
             if (err) {
-                console.log('error getting server urls:', err);
+                console.log('[getServerURL] error getting server urls:', err);
                 return reject(err);
             } else {
-                console.log('got server urls:', result[0].download_url);
+                console.log('[getServerURL] got server urls:', result[0].download_url);
 
                 // add version and build as latest if they don't exist -- IMPROVE THIS LATER!!!
                 if (!version) {
