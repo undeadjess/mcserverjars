@@ -28,22 +28,20 @@ let validServers = [];
 
 function getValidServers() {
     return new Promise((resolve, reject) => {
-        con.connect(function(err) {
+        con.query('SELECT type FROM server_types', function (err, result) {
             if (err) {
-                console.log('error connecting to mysql:', err);
-                reject(err);
+                console.log('[getValidServers] error getting servers:', err);
+                return reject(err);
+            }
+            if (result.length === 0) {
+                console.log('[getValidServers] no servers found, trying again in 5 seconds');
+                setTimeout(() => {
+                    resolve(getValidServers());
+                }, 5000);
             } else {
-                console.log('connected to mysql');
-                con.query('SELECT type FROM server_types', function (err, result) {
-                    if (err) {
-                        console.log('error getting servers:', err);
-                        reject(err);
-                    } else {
-                        console.log('got valid servers:', result);
-                        resolve(result.map(row => row.type));
-                    }
-                }
-            )};
+                console.log('[getValidServers] got valid servers');
+                resolve(result.map(row => row.type));
+            }
         });
     });
 }
@@ -51,7 +49,14 @@ function getValidServers() {
 
 
 async function initialize() {
-    console.log('initializing server');
+    con.connect(function(err) {
+        if (err) {
+            console.log('[initialize] error connecting to mysql:', err);
+            return;
+        }
+        console.log('[initialize] connected to mysql');
+    });
+    console.log('[initialize] initializing server');
     try {
         validServers = await getValidServers();
         console.log('fetched latest valid servers:', validServers);
