@@ -116,16 +116,20 @@ function getServerURL(server, version, build) {
         // set query and params based on input
         console.log('[getServerURL] getting server urls for', server, version, build);
         let query;
-        let params;
+        let paramsGetLatest;
+        let queryGetAllBuilds;
+        let queryGetAllVersions;
+
         if (build) {
-            query = `SELECT download_url FROM ${server} WHERE version = ? AND build = ?`;
+            queryGetLatest = `SELECT download_url FROM ${server} WHERE version = ? AND build = ?`;
             params = [version, build];
         } else if (version) {
-            query = `SELECT download_url FROM ${server} WHERE version = ?`;
+            queryGetLatest = `SELECT download_url FROM ${server} WHERE version = ?`;
+            queryGetAllBuilds = `SELECT build FROM ${server} WHERE version = ?`;
             params = [version];
         } else {
             // select the latest version and build - sort by version and build, but treat them as unsigned integers so that they sort correctly (oww my brain hurtssss from making this)
-            query = `
+            queryGetLatest = `
                 SELECT download_url 
                 FROM ${server} 
                 WHERE version = (
@@ -139,9 +143,13 @@ function getServerURL(server, version, build) {
                 ORDER BY CAST(build AS UNSIGNED) DESC 
                 LIMIT 1
             `;
+            // get just of all versions to display after latest - dont need to sort by build
+            queryGetAllVersions = `SELECT DISTINCT version FROM ${server} ORDER BY CAST(SUBSTRING_INDEX(version, '.', 1) AS UNSIGNED) DESC,
+                                                CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(version, '.', -2), '.', 1) AS UNSIGNED) DESC,
+                                                CAST(SUBSTRING_INDEX(version, '.', -1) AS UNSIGNED) DESC`;
             params = [];
         }
-        con.query(query, params, function (err, result) {
+        con.query(queryGetLatest, params, function (err, result) {
             if (err) {
                 console.log('[getServerURL] error getting server urls:', err);
                 return reject(err);
@@ -150,18 +158,43 @@ function getServerURL(server, version, build) {
 
                 // add version and build as latest if they don't exist -- IMPROVE THIS LATER!!!
                 if (!version) {
-                    version = "latest";
+                    version = "API data coming soon!";
                 }
                 if (!build) {
-                    build = "latest";
+                    build = "API data coming soon!";
                 }
 
-                resolve({
-                    server: server,
-                    version: version,
-                    build: build,
-                    downloadURL: result[0] ? result[0].download_url : null
-                });
+                let response = {
+                    latest: {
+                        server: server,
+                        version: version,
+                        build: build,
+                        downloadURL: result[0] ? result[0].download_url : null
+                    },
+                };
+
+                // check if either queryGetAllBuilds or queryGetAllVersions are defined, if so fetch them 
+                if (queryGetAllBuilds) {
+                    con.query(queryGetAllBuilds, [version], function (err, builds) {
+                        if (err) {
+                            console.log('[getServerURL] error getting builds:', err);
+                            return reject(err);
+                        }
+                        response.builds = builds.map(b => b.build); //  i fucking LOVE array maps
+                        resolve(response);
+                    });
+                } else if (queryGetAllVersions) {
+                    con.query(queryGetAllVersions, function (err, versions) {
+                        if (err) {
+                            console.log('[getServerURL] error getting versions:', err);
+                            return reject(err);
+                        }
+                        response.versions = versions.map(v => v.version);
+                        resolve(response);
+                    });
+                } else {
+                    resolve(response); // basically just give up and dont give anyhting (shouldnt happen but just in case :P)
+                }
             }
         });
     });
