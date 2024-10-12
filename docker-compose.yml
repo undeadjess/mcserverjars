@@ -4,7 +4,7 @@ services:
     # build:
     #   context: fetcher/
     #   dockerfile: Dockerfile
-    image: undeadjess/mcserverjars-fetcher:latest
+    image: ghcr.io:undeadjess/serverjars-fetcher:testing
     restart: on-failure
     environment:
       DB_HOST: db
@@ -20,7 +20,7 @@ services:
     # build:
     #   context: api/
     #   dockerfile: Dockerfile
-    image: undeadjess/mcserverjars-api:latest
+    image: ghcr.io:undeadjess/serverjars-api:testing
     restart: always
     ports:
       - "3002:3002"
