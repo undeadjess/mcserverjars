@@ -8,6 +8,8 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
+// serve public/ directory
+app.use(express.static('public'));
 
 // start the server
 app.listen(3000, () => {

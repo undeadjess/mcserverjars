@@ -2,50 +2,41 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ServerJars</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="icon" href="/favicon.ico">
 </head>
+
 <body>
-    <header>
-        <h1>ServerJars</h1>
-    </header>
-
-    <main>
-        <section class="main">
-            <div class="box">
-                <h2>Paper</h2>
-                <p>Download Latest Paper Server</p>
-                <button>Download Paper 1.21.1</button>
-            </div>
-            <div class="box">
-                <h2>Purpur</h2>
-                <p>Download Latest Purpur Server</p>
-                <button>Download Purpur 1.21.1</button>
-            </div>
-            <div class="box">
-                <h2>Spigot</h2>
-                <p>Download Latest Spigot Server</p>
-                <button>Download Spigot 1.21.1</button>
-            </div>
-        </section>
-
-        <section class="about">
-            <h2>About</h2>
-            <p>Serverjars presents a variety of Minecraft server jars in a single, easy to find place.</p>
-        </section>
-    </main>
-
-    <footer>
-        <nav>
+    <nav>
+        <div class="container">
+            <img src="/favicon.ico" alt="ServerJars Icon">
+            <a href="/">ServerJars</a>
             <ul>
-                <li><a href="/api">API</a></li>
-                <li><a href="/privacy">Privacy</a></li>
-                <li><a href="/source">Source</a></li>
+                <li><a href="/">Home</a></li>
+                <li><a href="/downloads">Downloads</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/github">Github</a></li>
             </ul>
-        </nav>
-    </footer>
+        </div>
+    </nav>
 
-    <script src="script.js"></script>
+    <div class="main">
+        <h1>Welcome to ServerJars</h1>
+        <p>ServerJars automatically fetches and builds the latest versions of many different Minecraft servers, and displays them in one easy place!</p>
+    </div>
+
+    <div class="downloader">
+        <h2>Downloads</h2>
+        <script src="/assets/js/downloader.js"></script>
+        <h3>I would like to download a <select id="serverType" disabled></select> Server</h3>
+        <h3>I would like the Minecraft version <select id="serverVersion" disabled></select></h3>
+        <h3>I would like the <select id="serverBuild" disabled></select> build</h3>
+        <button id="downloadButton" disabled>Download</button>
+    </div>
+
 </body>
+<footer class="text-center mt-4">
+    <p><span class="copyleft">&copy;</span> Copyright is for Cowards</p>
+</footer>
 </html>

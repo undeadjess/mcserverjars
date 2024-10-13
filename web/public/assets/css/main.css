@@ -1,0 +1,15 @@
+@font-face {
+    font-family: 'Excalifont';
+    src: url('/assets/fonts/font.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.copyleft {
+    display:inline-block;
+    transform: rotate(180deg);
+}
+
+body {
+    font-family: 'Excalifont', sans-serif; /* Fallback to sans-serif if the font fails to load */
+}
