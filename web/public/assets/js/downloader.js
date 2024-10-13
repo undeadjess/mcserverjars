@@ -1,69 +1,103 @@
-serverTypeSelector = document.getElementById("serverType");
-serverVersionSelector = document.getElementById("serverVersion");
-serverBuildSelector = document.getElementById("serverBuild");
+const serverTypeSelector = document.getElementById("serverType");
+const serverVersionSelector = document.getElementById("serverVersion");
+const serverBuildSelector = document.getElementById("serverBuild");
+const downloadButton = document.getElementById("downloadButton");
+
+let link = "";
+
+// set all selectors to disabled
+serverVersionSelector.disabled = true;
+serverBuildSelector.disabled = true;
+downloadButton.disabled = true;
+
+
 
 fetch("https://serverjars.juxtacloud.com/api/servers/")
     .then((response) => response.json())
     .then((data) => {
-        serverTypes = data;
-    })
-    .then(
-        serverTypes.forEach(function (serverType) {
-            var option = document.createElement("option");
+        console.log(data); // Log the fetched data
+        data.forEach(function (serverType) {
+            const option = document.createElement("option");
             option.text = serverType;
             serverTypeSelector.add(option);
-        }),
-    );
+        });
+        serverTypeSelector.selectedIndex = -1;
+    })
+    .catch((error) => console.error("Error fetching server types:", error));
+
+
+
 
 serverTypeSelector.addEventListener("change", function() {
-    fetch("https://serverjars.juxtacloud.com/api/servers/" + serverTypeSelector.value)
+    const selectedType = serverTypeSelector.value;
+
+    fetch(`https://serverjars.juxtacloud.com/api/servers/${selectedType}`)
         .then((response) => response.json())
         .then((data) => {
-        serverVersions = data;
-        })
-        .then(
-            serverVersions.forEach(function (serverVersion) {
-                var option = document.createElement("option");
+            console.log(data); // Log the fetched data
+            versions = data.versions;
+            serverVersionSelector.innerHTML = ""; // Clear previous options
+            versions.forEach(function (serverVersion) {
+                const option = document.createElement("option");
                 option.text = serverVersion;
                 serverVersionSelector.add(option);
-            }),
-        )
-        .then(
-            serverBuildSelector.add(new Option("latest", "latest")),
-        )
+            });
+            serverVersionSelector.add(new Option("latest", "latest")); // Add latest option
+            serverVersionSelector.disabled = false;
+            serverVersionSelector.selectedIndex = -1;
+        })
+        .catch((error) => console.error("Error fetching server versions:", error));
 });
+
+
 
 serverVersionSelector.addEventListener("change", function() {
-    fetch("https://serverjars.juxtacloud.com/api/servers/" + serverTypeSelector.value + "/" + serverVersionSelector.value)
+    const selectedType = serverTypeSelector.value;
+    const selectedVersion = serverVersionSelector.value;
+
+    fetch(`https://serverjars.juxtacloud.com/api/servers/${selectedType}/${selectedVersion}`)
         .then((response) => response.json())
         .then((data) => {
-        serverBuilds = data;
-        })
-        .then(
-            serverBuilds.forEach(function (serverBuild) {
-                var option = document.createElement("option");
+            console.log(data); // Log the fetched data
+            builds = data.builds;
+            serverBuildSelector.innerHTML = ""; // Clear previous options
+            builds.forEach(function (serverBuild) {
+                const option = document.createElement("option");
                 option.text = serverBuild;
                 serverBuildSelector.add(option);
-            }),
-        )
-        .then(
-            serverBuildSelector.add(new Option("latest", "latest")),
-        )
+            });
+            serverBuildSelector.add(new Option("latest", "latest")); // Add latest option
+            serverBuildSelector.disabled = false;
+            serverBuildSelector.selectedIndex = -1;
+        })
+        .catch((error) => console.error("Error fetching server builds:", error));
 });
 
+
+
 serverBuildSelector.addEventListener("change", function() {
-    selectedType = serverTypeSelector.value + "/"
-    if (serverVersionSelector.value == "latest") {
-        selectedVersion = null
-    } else {
-        selectedVersion = serverVersionSelector.value + "/"
-    }
+    const selectedType = serverTypeSelector.value + "/";
+    const selectedVersion = serverVersionSelector.value === "latest" ? "" : serverVersionSelector.value + "/";
+    const selectedBuild = serverBuildSelector.value === "latest" ? "" : serverBuildSelector.value + "/";
 
-    if (serverBuildSelector.value == "latest") {
-        selectedBuild = null
-    } else {
-        selectedBuild = serverBuildSelector.value + "/"
-    }
+    url = `https://serverjars.juxtacloud.com/api/servers/${selectedType}${selectedVersion}${selectedBuild}`;
 
-    fetch("https://serverjars.juxtacloud.com/api/servers/" + selectedType + selectedVersion + selectedBuild)
+    fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+            link = data.latest.downloadURL;
+            console.log(link); // Log the fetched data
+            downloadButton.disabled = false;
+        })
+        .catch((error) => console.error("Error fetching server builds:", error));
+
+});
+
+downloadButton.addEventListener("click", function() {
+    if (url === "") {
+        alert("Please select a server type, version, and build.");
+    } else {
+        // open new tab
+        window.open(link, "_blank");
+    }
 });
