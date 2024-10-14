@@ -125,7 +125,7 @@ function getServerURL(server, version, build) {
             params = [version, build];
         } else if (version) {
             queryGetLatest = `SELECT download_url FROM ${server} WHERE version = ?`;
-            queryGetAllBuilds = `SELECT build FROM ${server} WHERE version = ?`;
+            queryGetAllBuilds = `SELECT build FROM ${server} WHERE version = ? ORDER BY CAST(build AS UNSIGNED) DESC`;
             params = [version];
         } else {
             // select the latest version and build - sort by version and build, but treat them as unsigned integers so that they sort correctly (oww my brain hurtssss from making this)
@@ -144,9 +144,12 @@ function getServerURL(server, version, build) {
                 LIMIT 1
             `;
             // get just of all versions to display after latest - dont need to sort by build
-            queryGetAllVersions = `SELECT DISTINCT version FROM ${server} ORDER BY CAST(SUBSTRING_INDEX(version, '.', 1) AS UNSIGNED) DESC,
-                                                CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(version, '.', -2), '.', 1) AS UNSIGNED) DESC,
-                                                CAST(SUBSTRING_INDEX(version, '.', -1) AS UNSIGNED) DESC`;
+            queryGetAllVersions = `
+                SELECT DISTINCT version FROM ${server} ORDER BY 
+                    CAST(SUBSTRING_INDEX(version, '.', 1) AS UNSIGNED) DESC, 
+                    CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(version, '.', 2), '.', -1) AS UNSIGNED) DESC, 
+                    CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(version, '.', -1), '.', -1) AS UNSIGNED) DESC
+            `;
             params = [];
         }
         con.query(queryGetLatest, params, function (err, result) {
