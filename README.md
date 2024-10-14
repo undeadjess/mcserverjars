@@ -1,5 +1,5 @@
 <!-- Todo: change to absolute url path once image has been pushed -->
-<img src="web/public/assets/favicon.png" width="100">
+<img src="https://raw.githubusercontent.com/undeadjess/mcserverjars/refs/heads/main/web/public/assets/images/favicon.png" width="100">
 
 # ServerJars
 ServerJars automatically fetches and builds the latest versions of many different Minecraft servers, and displays them in one easy place!
