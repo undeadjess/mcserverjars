@@ -3,7 +3,12 @@ const express = require('express');
 const app = express();
 app.use(express.static('public'));
 
-// get the home page
+
+
+const port = process.env.LISTEN_PORT || 3000;
+
+
+// serve the home page
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
@@ -12,8 +17,8 @@ app.get('/', (req, res) => {
 app.use(express.static('public'));
 
 // start the server
-app.listen(3000, () => {
-    console.log('server started');
+app.listen(port, () => {
+    console.log('server started on port ,', port);
 });
 
 
