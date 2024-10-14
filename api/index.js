@@ -49,23 +49,34 @@ function getValidServers() {
 
 
 async function initialize() {
-    con.connect(function(err) {
-        if (err) {
-            console.log('[initialize] error connecting to mysql:', err);
-            return;
+    while (true) {
+        try {
+            await new Promise((resolve, reject) => {
+                con.connect(function(err) {
+                    if (err) {
+                        console.log('[initialize] error connecting to mysql:', err);
+                        return reject(err);
+                    }
+                    console.log('[initialize] connected to mysql');
+                    resolve();
+                });
+            });
+
+            console.log('[initialize] initializing server');
+            validServers = await getValidServers();
+            console.log('[initialize] using fetched servers:', validServers);
+            app.listen(port, () => {
+                console.log(`[initialize] server listening on port ${port}`);
+            });
+            console.log('[initialize] server initialized');
+            // exit the loop if connection worked
+            break;
+
+        } catch (error) {
+            console.error('[initialize] Error initializing server:', error);
+            console.log('[initialize] retrying in 5 seconds...');
+            await new Promise(resolve => setTimeout(resolve, 5000));
         }
-        console.log('[initialize] connected to mysql');
-    });
-    console.log('[initialize] initializing server');
-    try {
-        validServers = await getValidServers();
-        console.log('[initialize] using fetched servers:', validServers);
-        app.listen(port, () => {
-            console.log(`[initialize] server listening on port ${port}`);
-        });
-        console.log('[initialize] server initialized');
-    } catch (error) {
-        console.error('[initialize] Error initializing server:', error);
     }
 }
 
