@@ -14,7 +14,16 @@ const dbName = process.env.DB_NAME;
 
 
 // mysql connection
-var con = mysql.createConnection({
+// var con = mysql.createConnection({
+//     host: dbHost,
+//     user: dbUser,
+//     password: dbPassword,
+//     database: dbName
+// });
+
+// mysql connection pool
+var con = mysql.createPool({
+    connectionLimit: 10,
     host: dbHost,
     user: dbUser,
     password: dbPassword,
@@ -52,13 +61,14 @@ async function initialize() {
     while (true) {
         try {
             await new Promise((resolve, reject) => {
-                con.connect(function(err) {
+                con.getConnection((err, connection) => {
                     if (err) {
                         console.log('[initialize] error connecting to mysql:', err);
-                        return reject(err);
+                        reject(err);
+                    } else {
+                        console.log('[initialize] connected to mysql');
+                        resolve(connection);
                     }
-                    console.log('[initialize] connected to mysql');
-                    resolve();
                 });
             });
 
