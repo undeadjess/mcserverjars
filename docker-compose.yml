@@ -18,6 +18,7 @@ services:
   web:
     image: ghcr.io/undeadjess/serverjars-web:testing
     restart: on-failure
+    container_name: serverjars-web
     environment:
       LISTEN_PORT: 3000
     depends_on:
@@ -32,6 +33,7 @@ services:
   fetcher:
     image: ghcr.io/undeadjess/serverjars-fetcher:testing
     restart: on-failure
+    container_name: serverjars-fetcher
     environment:
       DB_HOST: db
       DB_USER: root
@@ -46,6 +48,7 @@ services:
   api:
     image: ghcr.io/undeadjess/serverjars-api:testing
     restart: always
+    container_name: serverjars-api
     environment:
       DB_HOST: db
       DB_USER: root
@@ -87,6 +90,13 @@ services:
   #     - "traefik.http.services.adminer.loadbalancer.server.port=8080"
   #   networks:
   #     - serverjars
+
+  watchtower:
+      command: 'serverjars-api serverjars-web serverjars-fetcher --interval 30'
+      image: containrrr/watchtower
+      volumes:
+          - '/var/run/docker.sock:/var/run/docker.sock'
+      container_name: watchtower
 
   # Middleware for stripping the /api prefix
   strip-api-prefix:
