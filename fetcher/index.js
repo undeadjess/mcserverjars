@@ -243,13 +243,13 @@ async function getFabricServerURLs() {
         for (const minecraftVersion of supportedMinecraftVersions) {
             // data structure: {version: "1.16.4", builds: [{build: 1, fabricLoaderVersion: "something", downloadURL: "something"}]}
             const fabricServerURLsForVersion = [];
-            let buildCounter = 1;
+            // let buildCounter = 1;
             for (const fabricLoaderVersion of fabricLoaderVersions) {
                 const downloadURL = (`https://meta.fabricmc.net/v2/versions/loader/${minecraftVersion}/${fabricLoaderVersion}/${installerVersion}/server/jar`);
 
                 fabricServerURLsForVersion.push({
-                    build: buildCounter++,
-                    fabricLoaderVersion: fabricLoaderVersion,
+                    // build: buildCounter++,
+                    build: fabricLoaderVersion,
                     downloadURL: downloadURL
                 });
                 
