@@ -16,6 +16,11 @@ app.get('/', (req, res) => {
 // serve public/ directory
 app.use(express.static('public'));
 
+// serve html files in public/ directory
+app.use(express.static('public', {
+    extensions: ['html']
+}));
+
 // start the server
 app.listen(port, () => {
     console.log('server started on port ,', port);
