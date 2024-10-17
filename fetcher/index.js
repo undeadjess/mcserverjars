@@ -243,12 +243,28 @@ async function getFabricServerURLs() {
         for (const minecraftVersion of supportedMinecraftVersions) {
             // data structure: {version: "1.16.4", builds: [{build: 1, fabricLoaderVersion: "something", downloadURL: "something"}]}
             const fabricServerURLsForVersion = [];
-            // let buildCounter = 1;
-            for (const fabricLoaderVersion of fabricLoaderVersions) {
+
+            // filter out any loader versions below 0.12
+            filteredFabricLoaderVersions = fabricLoaderVersions.map(version => {
+                // split the version string into an array of numbers
+                const versionNumbers = version.split('.').map(Number)
+                // discard any array items after the first 2
+                versionNumbers.length = 2;
+                // check if the second number is less than 12, else return the version
+                if (versionNumbers[1] < 12) {
+                    return;
+                } else {
+                    return version;
+                }
+            })
+            // remove any undefined values
+            .filter(Boolean);
+
+            // construct the download URL for each loader version and add it to the array
+            for (const fabricLoaderVersion of filteredFabricLoaderVersions) {
                 const downloadURL = (`https://meta.fabricmc.net/v2/versions/loader/${minecraftVersion}/${fabricLoaderVersion}/${installerVersion}/server/jar`);
 
                 fabricServerURLsForVersion.push({
-                    // build: buildCounter++,
                     build: fabricLoaderVersion,
                     downloadURL: downloadURL
                 });
