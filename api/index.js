@@ -113,7 +113,7 @@ app.get('/servers/:server/:version?/:build?', (req, res) => {
         res.json(data);
     }).catch(err => {
         console.error('[routes] Error fetching server URL:', err);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(400).json({ error: 'Error fetching server URL. Please check your parameters' });
     });
 });
 
@@ -178,7 +178,7 @@ function getServerURL(server, version, build) {
                 console.log('[getServerURL] error getting server urls:', err);
                 return reject(err);
             } else {
-                console.log('[getServerURL] got server urls:', result[0].download_url);
+                console.log('[getServerURL] got server urls:', result[0] ? result[0].download_url : null);
 
                 // add version and build as latest if they don't exist -- IMPROVE THIS LATER!!!
                 if (!version) {
@@ -186,6 +186,11 @@ function getServerURL(server, version, build) {
                 }
                 if (!build) {
                     build = "API data coming soon!";
+                }
+
+                // if download_url is null, error out
+                if (!result[0]) {
+                    return reject({ error: 'invalid Version and/or Build' });
                 }
 
                 let response = {
