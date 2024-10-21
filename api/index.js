@@ -13,14 +13,6 @@ const dbName = process.env.DB_NAME;
 
 
 
-// mysql connection
-// var con = mysql.createConnection({
-//     host: dbHost,
-//     user: dbUser,
-//     password: dbPassword,
-//     database: dbName
-// });
-
 // mysql connection pool
 var con = mysql.createPool({
     connectionLimit: 10,
@@ -37,6 +29,7 @@ let validServers = [];
 
 function getValidServers() {
     return new Promise((resolve, reject) => {
+        // get all server types from database
         con.query('SELECT type FROM server_types', function (err, result) {
             if (err) {
                 console.log('[getValidServers] error getting servers:', err);
@@ -60,6 +53,7 @@ function getValidServers() {
 async function initialize() {
     while (true) {
         try {
+            // connect to mysql
             await new Promise((resolve, reject) => {
                 con.getConnection((err, connection) => {
                     if (err) {
@@ -109,6 +103,7 @@ app.get('/servers/:server/:version?/:build?', (req, res) => {
     console.log('[routes] New request to', req.path, " from IP address:", req.ip);
     const { server, version, build } = req.params;
     
+    // get server URL. if version and build are not provided, pass nothing to the function
     getServerURL(server, version || null, build || null).then((data) => {
         res.json(data);
     }).catch(err => {
@@ -125,19 +120,17 @@ function getServerURL(server, version, build) {
 
         // Make sure values are valid to prevent SQL injection
         if (!(validServers.includes(server))) {
-            return resolve({ error: 'invalid server' });
+            return reject({ error: 'invalid server' });
         }
         if (version && !version.match(/\d+\.\d+(\.\d+)?/)) {
-            return resolve({ error: 'invalid version' });
+            return reject({ error: 'invalid version' });
         }
         if (build && !build.match(/\d+/)) {
-            return resolve({ error: 'invalid build' });
+            return reject({ error: 'invalid build' });
         }
 
         // set query and params based on input
         console.log('[getServerURL] getting server urls for', server, version, build);
-        let query;
-        let paramsGetLatest;
         let queryGetAllBuilds;
         let queryGetAllVersions;
 
@@ -149,27 +142,39 @@ function getServerURL(server, version, build) {
             queryGetAllBuilds = `SELECT build FROM ${server} WHERE version = ? ORDER BY CAST(build AS UNSIGNED) DESC`;
             params = [version];
         } else {
-            // select the latest version and build - sort by version and build, but treat them as unsigned integers so that they sort correctly (oww my brain hurtssss from making this)
+            // select the latest version and build - sort by version and build, but treat them as unsigned integers so that they sort correctly.
             queryGetLatest = `
                 SELECT download_url 
-                FROM ${server} 
+                FROM ${server}
                 WHERE version = (
                     SELECT version 
-                    FROM ${server} 
-                    ORDER BY CAST(SUBSTRING_INDEX(version, '.', 1) AS UNSIGNED) DESC,
-                             CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(version, '.', -2), '.', 1) AS UNSIGNED) DESC,
-                             CAST(SUBSTRING_INDEX(version, '.', -1) AS UNSIGNED) DESC 
+                    FROM ${server}
+                    ORDER BY 
+                        CAST(SUBSTRING_INDEX(version, '.', 1) AS UNSIGNED) DESC,
+                        CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(version, '.', -2), '.', 1) AS UNSIGNED) DESC,
+                        LENGTH(version) DESC,
+                        CAST(SUBSTRING_INDEX(version, '.', -1) AS UNSIGNED) DESC 
                     LIMIT 1
                 ) 
-                ORDER BY CAST(build AS UNSIGNED) DESC 
-                LIMIT 1
+                ORDER BY 
+                    CAST(SUBSTRING_INDEX(build, '.', 1) AS UNSIGNED) DESC,
+                    CASE WHEN LENGTH(build) - LENGTH(REPLACE(build, '.', '')) >= 1 THEN CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(build, '.', -2), '.', 1) AS UNSIGNED) ELSE 0 END DESC,
+                    CASE WHEN LENGTH(build) - LENGTH(REPLACE(build, '.', '')) = 2 THEN CAST(SUBSTRING_INDEX(build, '.', -1) AS UNSIGNED) ELSE 0 END DESC 
+                LIMIT 1;
             `;
             // get just of all versions to display after latest - dont need to sort by build
             queryGetAllVersions = `
-                SELECT DISTINCT version FROM ${server} ORDER BY 
-                    CAST(SUBSTRING_INDEX(version, '.', 1) AS UNSIGNED) DESC, 
-                    CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(version, '.', 2), '.', -1) AS UNSIGNED) DESC, 
-                    CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(version, '.', -1), '.', -1) AS UNSIGNED) DESC
+                SELECT DISTINCT version FROM ${server}
+                ORDER BY 
+                    CAST(SUBSTRING_INDEX(version, '.', 1) AS UNSIGNED) DESC,
+                    CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(version, '.', 2), '.', -1) AS UNSIGNED) DESC,
+                    LENGTH(version) DESC,
+                    CAST(
+                        CASE 
+                            WHEN SUBSTRING_INDEX(version, '.', -1) = version THEN 0
+                            ELSE SUBSTRING_INDEX(version, '.', -1) 
+                        END AS UNSIGNED
+                    ) DESC;
             `;
             params = [];
         }
@@ -181,12 +186,8 @@ function getServerURL(server, version, build) {
                 console.log('[getServerURL] got server urls:', result[0] ? result[0].download_url : null);
 
                 // add version and build as latest if they don't exist -- IMPROVE THIS LATER!!!
-                if (!version) {
-                    version = "API data coming soon!";
-                }
-                if (!build) {
-                    build = "API data coming soon!";
-                }
+                if (!version) version = 'latest';
+                if (!build) build = 'latest';
 
                 // if download_url is null, error out
                 if (!result[0]) {
@@ -209,7 +210,8 @@ function getServerURL(server, version, build) {
                             console.log('[getServerURL] error getting builds:', err);
                             return reject(err);
                         }
-                        response.builds = builds.map(b => b.build); //  i fucking LOVE array maps
+                        console.log('[getServerURL] DEBUG queryGetAllBuilds is defined');
+                        response.builds = builds.map(b => b.build);
                         resolve(response);
                     });
                 } else if (queryGetAllVersions) {
@@ -218,11 +220,12 @@ function getServerURL(server, version, build) {
                             console.log('[getServerURL] error getting versions:', err);
                             return reject(err);
                         }
+                        console.log('[getServerURL] DEBUG queryGetAllVersions is defined');
                         response.versions = versions.map(v => v.version);
                         resolve(response);
                     });
                 } else {
-                    resolve(response); // basically just give up and dont give anyhting (shouldnt happen but just in case :P)
+                    resolve(response); // basically just give up and dont give anything (shouldnt happen but just in case :P)
                 }
             }
         });

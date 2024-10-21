@@ -16,7 +16,7 @@ app.get('/', (req, res) => {
 // serve public/ directory
 app.use(express.static('public'));
 
-// serve html files in public/ directory
+// let html files be accessed without file extension
 app.use(express.static('public', {
     extensions: ['html']
 }));

@@ -6,11 +6,12 @@ const dbHost = process.env.DB_HOST;
 const dbUser = process.env.DB_USER;
 const dbPassword = process.env.DB_PASSWORD;
 const dbName = process.env.DB_NAME;
+const updateInterval = process.env.UPDATE_INTERVAL || 3600000; // 1 hour
 
 
 
 const pool = mysql.createPool({
-    connectionLimit: 10, // i dont actually know how many it will use but 10 seems safe lol
+    connectionLimit: 10,
     host: dbHost,
     user: dbUser,
     password: dbPassword,
@@ -19,68 +20,43 @@ const pool = mysql.createPool({
 
 
 
-// const serverTypes = ["vanilla", "paper", "purpur", "spigot", "bukkit", "forge", "fabric"];
-const serverTypes = ["vanilla", "paper", "purpur", "fabric"]; // actually working server types - initializeDatabase() will create tables for these types
+const serverTypes = ["vanilla", "paper", "purpur", "fabric"];
 
 
 
-// get a list of minecraft versions
-function getMinecraftVersions() {
-    return new Promise((resolve, reject) => {
-        var mcversions = [];
-        console.log('[getMinecraftVersions] Fetching minecraft versions');
-        url = 'https://launchermeta.mojang.com/mc/game/version_manifest.json';
-
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                versions = data.versions;
-                versions.forEach(version => {
-                    if (version.type === 'release') {
-                        mcversions.push({"version":version.id.toString(), "url":version.url.toString()}); // Add the version to the results
-                    }
-                });
-                resolve(mcversions); // Resolve the promise with the results
-            }).then(() => {
-                console.log('[getMinecraftVersions] Finished Fetching Minecraft Versions');
-
-            })
-            .catch(error => {
-                console.log('[getMinecraftVersions] error:', error);
-                resolve(mcversions); // Resolve the promise even if there's an error
-            });
-    });
-}
-
-minecraftversions = getMinecraftVersions()
-
-
-
-// server scripts
-// vanilla
 async function getVanillaServerURLs() {
-    const vanillaServerURLs = [];
-    console.log('[getVanillaServerURLs] Fetching Vanilla Server URLs');
-    const mcversions = await minecraftversions;
-
-    const fetchPromises = mcversions.map(async (version) => {
-        try {
-            const response = await fetch(version.url);
-            const data = await response.json();
-            // TODO - do something about the error for minecraft versions with no multiplayer server jar
-            return { version: version.version, downloadURL: data.downloads.server.url };
-        } catch (error) {
-            console.log(`[getVanillaServerURLs] error getting ${version.url}:`, error);
-            return null; 
-        }
-    });
-
-    const results = await Promise.all(fetchPromises);
-    const validResults = results.filter(result => result !== null);
+    console.log('[getMinecraftServerURLs] Fetching Minecraft versions and server URLs');
     
-    console.log('[getVanillaServerURLs] Finished Fetching Vanilla Server URLs');
-    return validResults;
+    try {
+        const versionsResponse = await fetch('https://launchermeta.mojang.com/mc/game/version_manifest.json');
+        const versionsData = await versionsResponse.json();
+        
+        const mcversions = versionsData.versions.filter(version => version.type === 'release');
+        
+        const fetchPromises = mcversions.map(async (version) => {
+            try {
+                const response = await fetch(version.url);
+                const data = await response.json();
+                return { version: version.id, downloadURL: data.downloads.server?.url }; // Optional chaining
+            } catch (error) {
+                console.log(`[getMinecraftServerURLs] error getting ${version.url}:`, error);
+                return null; 
+            }
+        });
+
+        const results = await Promise.all(fetchPromises);
+        const validResults = results.filter(result => result !== null);
+
+        console.log('[getMinecraftServerURLs] Finished fetching Minecraft server URLs');
+        return validResults;
+
+    } catch (error) {
+        console.log('[getMinecraftServerURLs] error:', error);
+        return []; // Return an empty array on error
+    }
 }
+
+
 
 // paper
 async function getPaperServerURLs() {
@@ -249,7 +225,7 @@ async function getFabricServerURLs() {
                 // split the version string into an array of numbers
                 const versionNumbers = version.split('.').map(Number)
                 // discard any array items after the first 2
-                versionNumbers.length = 2;
+                versionNumbers.length = 2; //maybe redundant?
                 // check if the second number is less than 12, else return the version
                 if (versionNumbers[1] < 12) {
                     return;
@@ -396,7 +372,7 @@ async function initializeDatabase() {
 async function main() {
     await initializeDatabase();
     await updateDatabase();
-    setInterval(updateDatabase, 3600000); // 3600000 = 1 hour
+    setInterval(updateDatabase, updateInterval);
 }
 
 main();

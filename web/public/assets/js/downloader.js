@@ -48,11 +48,11 @@ serverTypeSelector.addEventListener("change", function() {
 
             // set version selector to the latest version
             serverVersionSelector.selectedIndex = 0;
+            serverVersionSelector.dispatchEvent(new Event("change"));
 
             // enable version selector and disable others
             serverVersionSelector.disabled = false;
             serverBuildSelector.innerHTML = "";
-            serverBuildSelector.disabled = true;
             downloadButton.disabled = true;
         })
         .catch((error) => console.error("Error fetching server versions:", error));
@@ -101,6 +101,7 @@ serverVersionSelector.addEventListener("change", function() {
                 
                 // set version selector to latest version
                 serverBuildSelector.selectedIndex = 0;
+                serverBuildSelector.dispatchEvent(new Event("change"));
 
                 // enable build selector
                 serverBuildSelector.disabled = false;
