@@ -11,7 +11,6 @@ serverVersionSelector.disabled = true;
 serverBuildSelector.disabled = true;
 downloadButton.disabled = true;
 
-
 // get server types from api to populate the server type selector
 fetch("https://serverjars.juxtacloud.com/api/servers/")
     .then((response) => response.json())
@@ -25,10 +24,8 @@ fetch("https://serverjars.juxtacloud.com/api/servers/")
     })
     .catch((error) => console.error("Error fetching server types:", error));
 
-
-
 // when the server type selector changes, get the server versions from the api
-serverTypeSelector.addEventListener("change", function() {
+serverTypeSelector.addEventListener("change", function () {
     const selectedType = serverTypeSelector.value;
 
     fetch(`https://serverjars.juxtacloud.com/api/servers/${selectedType}`)
@@ -55,12 +52,13 @@ serverTypeSelector.addEventListener("change", function() {
             serverBuildSelector.innerHTML = "";
             downloadButton.disabled = true;
         })
-        .catch((error) => console.error("Error fetching server versions:", error));
+        .catch((error) =>
+            console.error("Error fetching server versions:", error)
+        );
 });
 
-
 // when the server version selector changes, get the server builds from the api
-serverVersionSelector.addEventListener("change", function() {
+serverVersionSelector.addEventListener("change", function () {
     const selectedType = serverTypeSelector.value;
     const selectedVersion = serverVersionSelector.value;
 
@@ -68,27 +66,33 @@ serverVersionSelector.addEventListener("change", function() {
     if (selectedVersion === "latest") {
         serverBuildSelector.innerHTML = "latest";
         serverBuildSelector.disabled = true;
-        
+
         url = `https://serverjars.juxtacloud.com/api/servers/${selectedType}`;
         console.log("api url:", url);
-    
+
         fetch(url)
             .then((response) => response.json())
             .then((data) => {
                 console.log("got from api: ", data);
                 finalDirectDownloadURL = data.latest.downloadURL;
-                console.log("set downlaod finalDirectDownloadURL to:", finalDirectDownloadURL);
+                console.log(
+                    "set downlaod finalDirectDownloadURL to:",
+                    finalDirectDownloadURL
+                );
                 downloadButton.disabled = false;
             })
-            .catch((error) => console.error("Error fetching server builds:", error));
-
+            .catch((error) =>
+                console.error("Error fetching server builds:", error)
+            );
     } else {
-        fetch(`https://serverjars.juxtacloud.com/api/servers/${selectedType}/${selectedVersion}`)
+        fetch(
+            `https://serverjars.juxtacloud.com/api/servers/${selectedType}/${selectedVersion}`
+        )
             .then((response) => response.json())
             .then((data) => {
                 builds = data.builds;
                 serverBuildSelector.innerHTML = "";
-                
+
                 // add latest option
                 serverBuildSelector.add(new Option("latest", "latest"));
 
@@ -98,7 +102,6 @@ serverVersionSelector.addEventListener("change", function() {
                     serverBuildSelector.add(option);
                 });
 
-                
                 // set version selector to latest version
                 serverBuildSelector.selectedIndex = 0;
                 serverBuildSelector.dispatchEvent(new Event("change"));
@@ -107,16 +110,23 @@ serverVersionSelector.addEventListener("change", function() {
                 serverBuildSelector.disabled = false;
                 downloadButton.disabled = true;
             })
-            .catch((error) => console.error("Error fetching server builds:", error));
+            .catch((error) =>
+                console.error("Error fetching server builds:", error)
+            );
     }
 });
 
-
 // when the server build selector changes, get the download url from the api
-serverBuildSelector.addEventListener("change", function() {
+serverBuildSelector.addEventListener("change", function () {
     const selectedType = serverTypeSelector.value + "/";
-    const selectedVersion = serverVersionSelector.value === "latest" ? "" : serverVersionSelector.value + "/";
-    const selectedBuild = serverBuildSelector.value === "latest" ? "" : serverBuildSelector.value + "/";
+    const selectedVersion =
+        serverVersionSelector.value === "latest"
+            ? ""
+            : serverVersionSelector.value + "/";
+    const selectedBuild =
+        serverBuildSelector.value === "latest"
+            ? ""
+            : serverBuildSelector.value + "/";
 
     url = `https://serverjars.juxtacloud.com/api/servers/${selectedType}${selectedVersion}${selectedBuild}`;
     console.log("api url:", url);
@@ -128,11 +138,12 @@ serverBuildSelector.addEventListener("change", function() {
             // enable the download button
             downloadButton.disabled = false;
         })
-        .catch((error) => console.error("Error fetching server builds:", error));
-
+        .catch((error) =>
+            console.error("Error fetching server builds:", error)
+        );
 });
 
-downloadButton.addEventListener("click", function() {
+downloadButton.addEventListener("click", function () {
     if (url === "") {
         // should never happen but just in case :P
         alert("Please select a server type, version, and build.");
