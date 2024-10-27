@@ -15,20 +15,20 @@ services:
         networks:
             - serverjars
 
-    web:
-        image: ghcr.io/undeadjess/serverjars-web:testing
-        restart: on-failure
-        container_name: serverjars-web
-        environment:
-            LISTEN_PORT: 3000
-        depends_on:
-            - api
-        labels:
-            - "traefik.enable=true"
-            - "traefik.http.routers.web.rule=PathPrefix(`/`)"
-            - "traefik.http.services.web.loadbalancer.server.port=3000"
-        networks:
-            - serverjars
+    # web:
+    #     image: ghcr.io/undeadjess/serverjars-web:testing
+    #     restart: on-failure
+    #     container_name: serverjars-web
+    #     environment:
+    #         LISTEN_PORT: 3000
+    #     depends_on:
+    #         - api
+    #     labels:
+    #         - "traefik.enable=true"
+    #         - "traefik.http.routers.web.rule=PathPrefix(`/`)"
+    #         - "traefik.http.services.web.loadbalancer.server.port=3000"
+    #     networks:
+    #         - serverjars
 
     fetcher:
         image: ghcr.io/undeadjess/serverjars-fetcher:testing
