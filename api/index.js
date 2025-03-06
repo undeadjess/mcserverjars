@@ -90,7 +90,7 @@ app.get("/", (req, res) => {
         " from IP address:",
         req.ip
     );
-    res.json({ types: ["servers"] });
+    res.json({ types: ["servers", "proxys"] });
 });
 
 app.get("/servers", (req, res) => {
