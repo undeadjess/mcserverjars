@@ -100,7 +100,7 @@ app.get("/servers", (req, res) => {
         " from IP address:",
         req.ip
     );
-    res.json(validServers);
+    res.json({servers: validServers});
 });
 
 app.get("/servers/:server/:version?/:build?", (req, res) => {
