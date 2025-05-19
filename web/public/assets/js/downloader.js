@@ -15,7 +15,7 @@ downloadButton.disabled = true;
 fetch("https://serverjars.juxtacloud.com/api/servers/")
     .then((response) => response.json())
     .then((data) => {
-        data.forEach(function (serverType) {
+        data.servers.forEach(function (serverType) {
             const option = document.createElement("option");
             option.text = serverType;
             serverTypeSelector.add(option);
