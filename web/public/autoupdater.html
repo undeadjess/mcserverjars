@@ -5,7 +5,6 @@
         <title>ServerJars</title>
         <link rel="stylesheet" href="assets/css/main.css"/>
         <link rel="icon" href="assets/images/favicon.ico"/>
-        <script src="assets/js/main.js" defer></script>
     </head>
     <body>
         <header>
@@ -21,15 +20,25 @@
             </ul>
         </nav>
         <main>
-            <h1>ServerJars</h1>
-            <p>ServerJars is a project that provides a collection of server jars for various Minecraft server types.</p>
-            <p>Check out our <a href="autoupdater.html">AutoUpdater</a> for automatic updates!</p>
+            <div class="main-section">
+                <div class="main-image">
+                    <img src="assets/images/autoupdater.svg" alt="ServerJars Logo" class="logo-image" />
+                </div>
+                <div class="main-dialog">
+                    <h1>AutoUpdater</h1>
+                    <p>
+                    A drop-in replacement for your Minecraft server jar. 
+                    </p>
+                    <p>
+                    Automatically downloads the latest version of your selected server type when started. 
+                    </p>
+                    <p>
+                    Powered by the ServerJars API, which builds and hosts the latest Minecraft server versions in one place.
+                    </p>
+                    <a href="https://github.com/undeadjess/serverjars-autoupdater/releases" target="_blank"><button class="download-latest-button" onclick="">Download AutoUpdater</button></a>
+                </div>
+            </div>
         </main>
-        <section class="type-tabs">
-            <ul id="type-list">
-                <li id="loading-type"><p>loading types...</p></li>
-            </ul>
-        </section>
         <section id="type-content">
         </section>
         <footer>

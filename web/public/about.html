@@ -3,40 +3,47 @@
     <head>
         <meta charset="UTF-8" />
         <title>ServerJars</title>
-        <link rel="stylesheet" href="/assets/css/main.css" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="stylesheet" href="assets/css/main.css"/>
+        <link rel="icon" href="assets/images/favicon.ico"/>
     </head>
-
     <body>
-        <div class="nav container">
-            <img class="icon" src="/favicon.ico" alt="ServerJars Icon" />
-            <a href="/" class="home">ServerJars</a>
+        <header>
+            <img src="assets/images/logo-text-dark.svg" alt="ServerJars Logo" class="logo" />
+        </header>
+        <nav>
             <ul>
-                <li><a href="/downloads">Downloads</a></li>
-                <li><a href="/about">About</a></li>
-                <li><a href="/github">Github</a></li>
+                <li><a href="index.html"><img src="assets/images/icons/home.svg" class="navicon"/>Home</a></li>
+                <li><a href="autoupdater.html"><img src="assets/images/icons/autoupdater.svg" class="navicon">AutoUpdater</a></li>
+                <li><a href="api.html"><img src="assets/images/icons/api.svg" class="navicon">API</a></li>
+                <li><a href="github.html"><img src="assets/images/icons/code.svg" class="navicon">GitHub</a></li>
+                <li><a href="about.html"><img src="assets/images/icons/info.svg" class="navicon">About</a></li>
             </ul>
-        </div>
-
-        <div class="main container">
-            <h1>About ServerJars</h1>
-        </div>
-
-        <div class="about container">
-            <p>
-                ServerJars automatically fetches and builds the latest versions
-                of many different Minecraft servers, and displays them in one
-                easy place!
-            </p>
-            <p>
-                ServerJars is run by
-                <a href="https://github.com/undeadjess">Jessica Somerville</a
-                >.<br />Code contributions are welcome over at the Github
-            </p>
-        </div>
-
-        <div class="footer container">
-            <p><span class="copyleft">&copy;</span> Copyright is for Cowards</p>
-        </div>
+        </nav>
+        <main>
+            <div class="main-section">
+                <div class="main-image">
+                    <img src="assets/images/logo.svg" alt="ServerJars Logo" class="logo-image" />
+                </div>
+                <div class="main-dialog">
+                    <h1>ServerJars</h1>
+                    <p>
+                    ServerJars automatically fetches and builds the latest versions of many different Minecraft servers, and displays them in one easy place!
+                    </p>
+                    <p>
+                    ServerJars has this website, an API (<a href="https://github.com/undeadjess/serverjars?tab=readme-ov-file#api-usage" target="_blank">docs</a>), and an 
+                    <a href="/autoupdater.html">automatic updater</a>!
+                    </p>
+                    <p>
+                    ServerJars is run by <a href="https://jeso.dev" target="_blank">Jessica S.</a> and <a href="https://about.juxtacloud.com" target="_blank">Juxtacloud</a>.
+                    </p>
+                </div>
+            </div>
+        </main>
+        <section id="type-content">
+        </section>
+        <footer>
+            <p>&copy; <script>document.write(new Date().getFullYear())</script> ServerJars</p>
+            <p><a href="https://jeso.dev">Jessica S.</a></p>  <!--  | <a href="https://about.juxtacloud.com">Juxtacloud</a> -->
     </body>
 </html>
+<!
