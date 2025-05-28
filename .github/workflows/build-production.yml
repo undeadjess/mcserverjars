@@ -7,11 +7,6 @@ on:
   push:
     branches:
       - main
-      - testing
-  pull_request:
-    branches:
-      - main
-      - testing
 
 jobs:
   build:
@@ -34,7 +29,7 @@ jobs:
         context: ./fetcher/
         file: ./fetcher/Dockerfile
         push: true
-        tags: ghcr.io/undeadjess/serverjars-fetcher:testing
+        tags: ghcr.io/undeadjess/serverjars-fetcher:production
 
     - name: Build and push api image
       uses: docker/build-push-action@v5
@@ -42,7 +37,7 @@ jobs:
         context: ./api/
         file: ./api/Dockerfile
         push: true
-        tags: ghcr.io/undeadjess/serverjars-api:testing
+        tags: ghcr.io/undeadjess/serverjars-api:production
 
     - name: Build and push web image
       uses: docker/build-push-action@v5
@@ -50,4 +45,4 @@ jobs:
         context: ./web/
         file: ./web/Dockerfile
         push: true
-        tags: ghcr.io/undeadjess/serverjars-web:testing
+        tags: ghcr.io/undeadjess/serverjars-web:production

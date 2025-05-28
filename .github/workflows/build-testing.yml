@@ -1,0 +1,49 @@
+name: Build and Push Docker Images
+permissions:
+      contents: read
+      packages: write
+
+on:
+  push:
+    branches:
+      - main
+      - testing
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the repo
+      uses: actions/checkout@v4
+
+    - name: Login to GitHub Packages
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push fetcher image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./fetcher/
+        file: ./fetcher/Dockerfile
+        push: true
+        tags: ghcr.io/undeadjess/serverjars-fetcher:testing
+
+    - name: Build and push api image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./api/
+        file: ./api/Dockerfile
+        push: true
+        tags: ghcr.io/undeadjess/serverjars-api:testing
+
+    - name: Build and push web image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./web/
+        file: ./web/Dockerfile
+        push: true
+        tags: ghcr.io/undeadjess/serverjars-web:testing
