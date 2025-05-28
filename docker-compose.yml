@@ -16,7 +16,7 @@ services:
             - serverjars
 
     web:
-        image: ghcr.io/undeadjess/serverjars-web:testing
+        image: ghcr.io/undeadjess/serverjars-web:production
         restart: on-failure
         container_name: serverjars-web
         environment:
@@ -31,7 +31,7 @@ services:
             - serverjars
 
     fetcher:
-        image: ghcr.io/undeadjess/serverjars-fetcher:testing
+        image: ghcr.io/undeadjess/serverjars-fetcher:production
         restart: on-failure
         container_name: serverjars-fetcher
         environment:
@@ -46,7 +46,7 @@ services:
             - serverjars
 
     api:
-        image: ghcr.io/undeadjess/serverjars-api:testing
+        image: ghcr.io/undeadjess/serverjars-api:production
         restart: always
         container_name: serverjars-api
         environment:
