@@ -1,11 +1,15 @@
-# /fetcher/Dockerfile
-FROM node:18
+# build
+FROM node:18 as builder
 
 WORKDIR /usr/src/app
-
 COPY package*.json ./
-COPY index.js index.js
+RUN npm install --production
+COPY index.js .
 
-RUN npm install
+# final
+FROM node:18-slim
+
+WORKDIR /usr/src/app
+COPY --from=builder /usr/src/app .
 
 CMD [ "node", "index.js" ]
