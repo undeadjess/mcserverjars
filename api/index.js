@@ -1,276 +1,263 @@
-const { json } = require("body-parser");
+const LISTEN_PORT = 3000;
+
+const types = ["servers", "proxies"];
+
 const express = require("express");
 const app = express();
-const mysql = require("mysql");
 
-const port = process.env.LISTEN_PORT || 3000;
-const dbHost = process.env.DB_HOST;
-const dbUser = process.env.DB_USER;
-const dbPassword = process.env.DB_PASSWORD;
-const dbName = process.env.DB_NAME;
+const path = require("path");
+const fs = require("fs");
 
-// mysql connection pool
-var con = mysql.createPool({
-    connectionLimit: 10,
-    host: dbHost,
-    user: dbUser,
-    password: dbPassword,
-    database: dbName,
+app.get("/api", (req, res) => {
+    console.log(
+        "[routes] New request to",
+        req.path,
+        " from IP address:",
+        req.ip
+    );
+    res.json({
+        types: types,
+    });
 });
 
-// get valid servers from database
-let validServers = [];
+app.get("/api/:type/:server?/:version?/:build?", (req, res) => {
+    console.log(
+        "[routes] New request to",
+        req.path,
+        " from IP address:",
+        req.ip
+    );
 
-function getValidServers() {
-    return new Promise((resolve, reject) => {
-        // get all server types from database
-        con.query("SELECT type FROM server_types", function (err, result) {
-            if (err) {
-                console.log("[getValidServers] error getting servers:", err);
-                return reject(err);
+    const { type, server, version, build } = req.params;
+
+    switch (type) {
+        case "servers":
+            if (!server) {
+                return fetchServers()
+                    .then((servers) => res.json({ servers }))
+                    .catch((err) =>
+                        res.status(500).json({ error: err.message })
+                    );
+            } else if (server && !version) {
+                return fetchServerVersions(server)
+                    .then((data) => res.json(data))
+                    .catch((err) =>
+                        res.status(500).json({ error: err.message })
+                    );
+            } else if (server && version && !build) {
+                return fetchServerBuilds(server, version)
+                    .then((data) => res.json(data))
+                    .catch((err) =>
+                        res.status(500).json({ error: err.message })
+                    );
+            } else if (server && version && build) {
+                return fetchServerDownloadURL(server, version, build)
+                    .then((url) => {
+                        if (url) {
+                            return res.json({ downloadURL: url });
+                        } else {
+                            return res
+                                .status(404)
+                                .json({ error: "Build not found" });
+                        }
+                    })
+                    .catch((err) =>
+                        res.status(500).json({ error: err.message })
+                    );
             }
-            if (result.length === 0) {
-                console.log(
-                    "[getValidServers] no servers found, trying again in 5 seconds"
-                );
-                setTimeout(() => {
-                    resolve(getValidServers());
-                }, 5000);
-            } else {
-                console.log("[getValidServers] got valid servers");
-                resolve(result.map((row) => row.type));
-            }
-        });
-    });
-}
-
-async function initialize() {
-    while (true) {
-        try {
-            // connect to mysql
-            await new Promise((resolve, reject) => {
-                con.getConnection((err, connection) => {
-                    if (err) {
-                        console.log(
-                            "[initialize] error connecting to mysql:",
-                            err
-                        );
-                        reject(err);
-                    } else {
-                        console.log("[initialize] connected to mysql");
-                        resolve(connection);
-                    }
-                });
-            });
-
-            console.log("[initialize] initializing server");
-            validServers = await getValidServers();
-            console.log("[initialize] using fetched servers:", validServers);
-            app.listen(port, () => {
-                console.log(`[initialize] server listening on port ${port}`);
-            });
-            console.log("[initialize] server initialized");
-            // exit the loop if connection worked
             break;
-        } catch (error) {
-            console.error("[initialize] Error initializing server:", error);
-            console.log("[initialize] retrying in 5 seconds...");
-            await new Promise((resolve) => setTimeout(resolve, 5000));
+
+        case "proxies":
+            if (!server) {
+                return fetchProxies()
+                    .then((proxies) => res.json({ proxies }))
+                    .catch((err) =>
+                        res.status(500).json({ error: err.message })
+                    );
+            } else if (server && !version) {
+                return fetchProxyVersions(server)
+                    .then((data) => res.json(data))
+                    .catch((err) =>
+                        res.status(500).json({ error: err.message })
+                    );
+            } else if (server && version && !build) {
+                return fetchProxyBuilds(server, version)
+                    .then((data) => res.json(data))
+                    .catch((err) =>
+                        res.status(500).json({ error: err.message })
+                    );
+            } else if (server && version && build) {
+                return fetchProxyDownloadURL(server, version, build)
+                    .then((url) => {
+                        if (url) {
+                            return res.json({ downloadURL: url });
+                        } else {
+                            return res
+                                .status(404)
+                                .json({ error: "Build not found" });
+                        }
+                    })
+                    .catch((err) =>
+                        res.status(500).json({ error: err.message })
+                    );
+            }
+            break;
+
+        default:
+            return res.status(400).json({
+                error: "Invalid type. Valid types are: " + types.join(", "),
+            });
+    }
+
+    return res.status(404).json({ error: "Not found" });
+});
+
+const serversDir = path.join(__dirname, "servers");
+const proxiesDir = path.join(__dirname, "proxies");
+const serverModules = {};
+const proxyModules = {};
+
+// Dynamically import all server files
+fs.readdirSync(serversDir).forEach((file) => {
+    const serverName = path.basename(file, ".js");
+    const serverModule = require(path.join(serversDir, file));
+    serverModules[serverName] = serverModule;
+});
+
+// Dynamically load proxies
+fs.readdirSync(proxiesDir).forEach((file) => {
+    const proxyName = path.basename(file, ".js");
+    const proxyModule = require(path.join(proxiesDir, file));
+    proxyModules[proxyName] = proxyModule;
+});
+
+// server functions
+const fetchServers = () => Promise.resolve(Object.keys(serverModules));
+
+const fetchServerVersions = async (server) => {
+    if (!serverModules[server]) {
+        throw new Error("Server not found");
+    }
+
+    const versions = await serverModules[server].getVersions();
+    let latest = null;
+
+    if (serverModules[server].getLatest) {
+        try {
+            latest = await serverModules[server].getLatest();
+        } catch (err) {
+            console.log(
+                `[fetchServerVersions] Could not get latest for ${server}:`,
+                err.message
+            );
         }
     }
-}
 
-initialize();
+    return { latest, versions };
+};
 
-// routes
-app.get("/", (req, res) => {
-    console.log(
-        "[routes] New request to",
-        req.path,
-        " from IP address:",
-        req.ip
-    );
-    res.json({ types: ["servers", "proxys"] });
+const fetchServerBuilds = async (server, version) => {
+    if (!serverModules[server]) {
+        throw new Error("Server not found");
+    }
+
+    const builds = await serverModules[server].getBuilds(version);
+    let latest = null;
+
+    if (builds.length > 0) {
+        const latestBuild = builds[0];
+        try {
+            const downloadURL = await serverModules[server].getDownloadURL(
+                version,
+                latestBuild
+            );
+            latest = {
+                server,
+                version,
+                build: latestBuild,
+                downloadURL,
+            };
+        } catch (err) {
+            console.log(
+                `[fetchServerBuilds] Could not get latest build info:`,
+                err.message
+            );
+        }
+    }
+
+    return { latest, builds };
+};
+
+const fetchServerDownloadURL = (server, version, build) => {
+    if (!serverModules[server]) {
+        return Promise.reject(new Error("Server not found"));
+    }
+    return serverModules[server].getDownloadURL(version, build);
+};
+
+const fetchProxies = () => Promise.resolve(Object.keys(proxyModules));
+
+const fetchProxyVersions = async (proxy) => {
+    if (!proxyModules[proxy]) {
+        throw new Error("Proxy not found");
+    }
+
+    const versions = await proxyModules[proxy].getVersions();
+    let latest = null;
+
+    if (proxyModules[proxy].getLatest) {
+        try {
+            latest = await proxyModules[proxy].getLatest();
+        } catch (err) {
+            console.log(
+                `[fetchProxyVersions] Could not get latest for ${proxy}:`,
+                err.message
+            );
+        }
+    }
+
+    return { latest, versions };
+};
+
+const fetchProxyBuilds = async (proxy, version) => {
+    if (!proxyModules[proxy]) {
+        throw new Error("Proxy not found");
+    }
+
+    const builds = await proxyModules[proxy].getBuilds(version);
+    let latest = null;
+
+    if (builds.length > 0) {
+        const latestBuild = builds[0];
+        try {
+            const downloadURL = await proxyModules[proxy].getDownloadURL(
+                version,
+                latestBuild
+            );
+            latest = {
+                server: proxy,
+                version,
+                build: latestBuild,
+                downloadURL,
+            };
+        } catch (err) {
+            console.log(
+                `[fetchProxyBuilds] Could not get latest build info:`,
+                err.message
+            );
+        }
+    }
+
+    return { latest, builds };
+};
+
+const fetchProxyDownloadURL = (proxy, version, build) => {
+    if (!proxyModules[proxy]) {
+        return Promise.reject(new Error("Proxy not found"));
+    }
+    return proxyModules[proxy].getDownloadURL(version, build);
+};
+
+app.listen(LISTEN_PORT, () => {
+    console.log("[routes] Server is running on port", LISTEN_PORT);
 });
-
-app.get("/servers", (req, res) => {
-    console.log(
-        "[routes] New request to",
-        req.path,
-        " from IP address:",
-        req.ip
-    );
-    res.json({servers: validServers});
-});
-
-app.get("/servers/:server/:version?/:build?", (req, res) => {
-    console.log(
-        "[routes] New request to",
-        req.path,
-        " from IP address:",
-        req.ip
-    );
-    const { server, version, build } = req.params;
-
-    // get server URL. if version and build are not provided, pass nothing to the function
-    getServerURL(server, version || null, build || null)
-        .then((data) => {
-            res.json(data);
-        })
-        .catch((err) => {
-            console.error("[routes] Error fetching server URL:", err);
-            res.status(400).json({
-                error: "Error fetching server URL. Please check your parameters",
-            });
-        });
-});
-
-// get server URLs from database
-function getServerURL(server, version, build) {
-    return new Promise((resolve, reject) => {
-        // Make sure values are valid to prevent SQL injection
-        if (!validServers.includes(server)) {
-            return reject({ error: "invalid server" });
-        }
-        if (version && !version.match(/\d+\.\d+(\.\d+)?/)) {
-            return reject({ error: "invalid version" });
-        }
-        if (build && !build.match(/\d+/)) {
-            return reject({ error: "invalid build" });
-        }
-
-        // set query and params based on input
-        console.log(
-            "[getServerURL] getting server urls for",
-            server,
-            version,
-            build
-        );
-        let queryGetAllBuilds;
-        let queryGetAllVersions;
-
-        if (build) {
-            queryGetLatest = `SELECT download_url FROM ${server} WHERE version = ? AND build = ?`;
-            params = [version, build];
-        } else if (version) {
-            queryGetLatest = `SELECT download_url FROM ${server} WHERE version = ?`;
-            queryGetAllBuilds = `SELECT build FROM ${server} WHERE version = ? ORDER BY CAST(build AS UNSIGNED) DESC`;
-            params = [version];
-        } else {
-            // select the latest version and build - sort by version and build, but treat them as unsigned integers so that they sort correctly.
-            queryGetLatest = `
-                SELECT download_url 
-                FROM ${server}
-                WHERE version = (
-                    SELECT version 
-                    FROM ${server}
-                    ORDER BY 
-                        CAST(SUBSTRING_INDEX(version, '.', 1) AS UNSIGNED) DESC,
-                        CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(version, '.', -2), '.', 1) AS UNSIGNED) DESC,
-                        LENGTH(version) DESC,
-                        CAST(SUBSTRING_INDEX(version, '.', -1) AS UNSIGNED) DESC 
-                    LIMIT 1
-                ) 
-                ORDER BY 
-                    CAST(SUBSTRING_INDEX(build, '.', 1) AS UNSIGNED) DESC,
-                    CASE WHEN LENGTH(build) - LENGTH(REPLACE(build, '.', '')) >= 1 THEN CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(build, '.', -2), '.', 1) AS UNSIGNED) ELSE 0 END DESC,
-                    CASE WHEN LENGTH(build) - LENGTH(REPLACE(build, '.', '')) = 2 THEN CAST(SUBSTRING_INDEX(build, '.', -1) AS UNSIGNED) ELSE 0 END DESC 
-                LIMIT 1;
-            `;
-            // get just of all versions to display after latest - dont need to sort by build
-            queryGetAllVersions = `
-                SELECT DISTINCT version FROM ${server}
-                ORDER BY 
-                    CAST(SUBSTRING_INDEX(version, '.', 1) AS UNSIGNED) DESC,
-                    CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(version, '.', 2), '.', -1) AS UNSIGNED) DESC,
-                    LENGTH(version) DESC,
-                    CAST(
-                        CASE 
-                            WHEN SUBSTRING_INDEX(version, '.', -1) = version THEN 0
-                            ELSE SUBSTRING_INDEX(version, '.', -1) 
-                        END AS UNSIGNED
-                    ) DESC;
-            `;
-            params = [];
-        }
-        con.query(queryGetLatest, params, function (err, result) {
-            if (err) {
-                console.log("[getServerURL] error getting server urls:", err);
-                return reject(err);
-            } else {
-                console.log(
-                    "[getServerURL] got server urls:",
-                    result[0] ? result[0].download_url : null
-                );
-
-                // add version and build as latest if they don't exist -- IMPROVE THIS LATER!!!
-                // if (!version) version = "latest";
-                // if (!build) build = "latest";
-
-                if (!version) {
-                    // get the latest version from the result
-                    if (result[0]) {
-                        version = result[0].version || "latest";
-                    } else {
-                        return reject({ error: "invalid Version and/or Build" });
-                    }
-                }
-
-                // if download_url is null, error out
-                if (!result[0]) {
-                    return reject({ error: "invalid Version and/or Build" });
-                }
-
-                let response = {
-                    latest: {
-                        server: server,
-                        version: version,
-                        build: build,
-                        downloadURL: result[0] ? result[0].download_url : null,
-                    },
-                };
-
-                // check if either queryGetAllBuilds or queryGetAllVersions are defined, if so fetch them
-                if (queryGetAllBuilds) {
-                    con.query(
-                        queryGetAllBuilds,
-                        [version],
-                        function (err, builds) {
-                            if (err) {
-                                console.log(
-                                    "[getServerURL] error getting builds:",
-                                    err
-                                );
-                                return reject(err);
-                            }
-                            console.log(
-                                "[getServerURL] DEBUG queryGetAllBuilds is defined"
-                            );
-                            response.builds = builds.map((b) => b.build);
-                            resolve(response);
-                        }
-                    );
-                } else if (queryGetAllVersions) {
-                    con.query(queryGetAllVersions, function (err, versions) {
-                        if (err) {
-                            console.log(
-                                "[getServerURL] error getting versions:",
-                                err
-                            );
-                            return reject(err);
-                        }
-                        console.log(
-                            "[getServerURL] DEBUG queryGetAllVersions is defined"
-                        );
-                        response.versions = versions.map((v) => v.version);
-                        resolve(response);
-                    });
-                } else {
-                    resolve(response); // basically just give up and dont give anything (shouldnt happen but just in case :P)
-                }
-            }
-        });
-    });
-}
-
-

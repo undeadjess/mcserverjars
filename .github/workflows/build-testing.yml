@@ -24,14 +24,6 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build and push fetcher image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./fetcher/
-        file: ./fetcher/Dockerfile
-        push: true
-        tags: ghcr.io/undeadjess/serverjars-fetcher:testing
-
     - name: Build and push api image
       uses: docker/build-push-action@v5
       with:
