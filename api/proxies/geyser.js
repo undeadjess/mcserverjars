@@ -1,5 +1,5 @@
 const semver = require("semver");
-const baseURL = "https://api.papermc.io/v2/projects/velocity";
+const baseURL = "https://download.geysermc.org/v2/projects/geyser";
 let cached = null;
 
 // Prefetch and cache the full structure
@@ -7,16 +7,24 @@ async function preload() {
     if (cached) return cached;
     const versionData = await fetch(baseURL).then((res) => res.json());
     const versionPromises = versionData.versions.map(async (version) => {
-        const buildRes = await fetch(`${baseURL}/versions/${version}`);
-        const buildJson = await buildRes.json();
-        const builds = buildJson.builds.map((build) => ({
-            build,
-            downloadURL: `${baseURL}/versions/${version}/builds/${build}/downloads/velocity-${version}-${build}.jar`,
-        }));
-        return { version, builds };
+        try {
+            const buildRes = await fetch(`${baseURL}/versions/${version}`);
+            const buildJson = await buildRes.json();
+            const builds = buildJson.builds.map((build) => ({
+                build,
+                downloadURL: `${baseURL}/versions/${version}/builds/${build}/downloads/standalone`,
+            }));
+            return { version, builds };
+        } catch (error) {
+            console.log(
+                `[preload] error getting builds for version ${version}:`,
+                error
+            );
+            return { version, builds: [] };
+        }
     });
     const all = await Promise.all(versionPromises);
-    cached = all;
+    cached = all.filter((entry) => entry.builds.length > 0);
     return cached;
 }
 
@@ -68,7 +76,7 @@ module.exports = {
         );
 
         return {
-            server: "velocity",
+            server: "geyser",
             version: latestVersion,
             build: latestBuild,
             downloadURL: buildEntry.downloadURL,
