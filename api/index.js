@@ -204,8 +204,17 @@ function getServerURL(server, version, build) {
                 );
 
                 // add version and build as latest if they don't exist -- IMPROVE THIS LATER!!!
-                if (!version) version = "latest";
-                if (!build) build = "latest";
+                // if (!version) version = "latest";
+                // if (!build) build = "latest";
+
+                if (!version) {
+                    // get the latest version from the result
+                    if (result[0]) {
+                        version = result[0].version || "latest";
+                    } else {
+                        return reject({ error: "invalid Version and/or Build" });
+                    }
+                }
 
                 // if download_url is null, error out
                 if (!result[0]) {
@@ -263,3 +272,5 @@ function getServerURL(server, version, build) {
         });
     });
 }
+
+
