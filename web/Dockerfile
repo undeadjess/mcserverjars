@@ -4,7 +4,8 @@ FROM node:18 as builder
 WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install --production
-COPY index.js .
+COPY index.js index.js
+COPY public/ public/
 
 # final
 FROM node:18-slim
