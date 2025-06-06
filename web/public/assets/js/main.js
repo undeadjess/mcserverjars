@@ -34,7 +34,7 @@ const openTab = async (type) => {
     // fetch the servers for the selected type
     const response = await fetch(serverBaseUrl + "/" + type);
     const serversResponse = await response.json();
-    const servers = serversResponse.servers;
+    const servers = serversResponse[type] || [];
     console.log(servers);
 
     // make menu for each server
