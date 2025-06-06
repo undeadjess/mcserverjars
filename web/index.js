@@ -7,7 +7,7 @@ const port = process.env.LISTEN_PORT || 3000;
 
 // serve the home page
 app.get("/", (req, res) => {
-    res.sendFile(__dirname + "/index.html");
+    res.sendFile(__dirname + "index.html");
 });
 
 // serve public/ directory

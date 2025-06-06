@@ -4,7 +4,9 @@
         <meta charset="UTF-8" />
         <title>ServerJars</title>
         <link rel="stylesheet" href="assets/css/main.css"/>
+        <link rel="stylesheet" href="assets/css/version-browser.css"/>
         <link rel="icon" href="assets/images/favicon.ico"/>
+        <script src="assets/js/version-browser.js" defer></script>
     </head>
     <body>
         <header>
@@ -19,28 +21,27 @@
                 <li><a href="about"><img src="assets/images/icons/info.svg" class="navicon">About</a></li>
             </ul>
         </nav>
-        <main>
-            <div class="main-section">
-                <div class="main-image">
-                    <img src="assets/images/autoupdater.svg" alt="ServerJars Logo" class="logo-image" />
-                </div>
-                <div class="main-dialog">
-                    <h1>AutoUpdater</h1>
-                    <p>
-                    A drop-in replacement for your Minecraft server jar. 
-                    </p>
-                    <p>
-                    Automatically downloads the latest version of your selected server type when started. 
-                    </p>
-                    <p>
-                    Powered by the ServerJars API, which builds and hosts the latest Minecraft server versions in one place.
-                    </p>
-                    <a href="https://github.com/undeadjess/serverjars-autoupdater/releases" target="_blank"><button class="download-latest-button" onclick="">Download AutoUpdater</button></a>
-                </div>
+
+        <section id="version-content">
+            <h1>Version Browser</h1>
+            <div class="dropdowns">
+                <select id="type-select" disabled>
+                    <option value="" disabled selected>Select a server type</option>
+                </select>
+                <select id="server-select" disabled>
+                    <option value="" disabled selected>Select a server</option>
+                </select>
+                <select id="version-select" disabled>
+                    <option value="" disabled selected>Select a version (optional)</option>
+                </select>
             </div>
-        </main>
-        <section id="type-content">
+            <h2>Available Versions</h2>
+            <p id="version-info">Select a server type and server to view available versions.</p>
+            <ul id="version-list">
+                <!-- Version items will be dynamically inserted here -->
+            </ul>
         </section>
+        
         <footer>
             <p>&copy; <script>document.write(new Date().getFullYear())</script> ServerJars</p>
             <p><a href="https://jeso.dev">Jessica S.</a></p>  <!--  | <a href="https://about.juxtacloud.com">Juxtacloud</a> -->

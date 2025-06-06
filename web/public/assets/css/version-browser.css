@@ -1,0 +1,87 @@
+/* version-browser.css */
+
+/* Section Header */
+#version-content {
+    background-color: #ffffff;
+    padding: 40px 30px;
+    margin: 20px auto;
+    max-width: 1000px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+#version-content h1 {
+    font-size: 32px;
+    margin-bottom: 20px;
+    color: #333;
+    text-align: center;
+}
+
+#version-content h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: #2d2d2d;
+}
+
+/* Info message */
+#version-info {
+    font-size: 16px;
+    color: #d9534f;
+    margin-bottom: 20px;
+}
+
+/* Version List */
+#version-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Each version entry */
+.version-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    background-color: #f9f9f9;
+    padding: 15px 20px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    font-size: 16px;
+}
+
+/* Details inside each entry */
+.version-item span {
+    margin-right: 20px;
+    font-weight: 500;
+    color: #333;
+    white-space: nowrap;
+}
+
+.version-item .version-name {
+    text-transform: capitalize;
+}
+
+.version-item .version-number {
+    font-family: monospace;
+    color: #666;
+}
+
+/* Download button */
+.version-item .download-link {
+    background-color: #ff5a5f;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.version-item .download-link:hover {
+    background-color: #e14b4f;
+}

@@ -30,21 +30,6 @@ services:
         networks:
             - serverjars
 
-    fetcher:
-        image: ghcr.io/undeadjess/serverjars-fetcher:production
-        restart: on-failure
-        container_name: serverjars-fetcher
-        environment:
-            DB_HOST: db
-            DB_USER: root
-            DB_PASSWORD: ExamplePassword-PleaseChange
-            DB_NAME: mcserverjars
-        depends_on:
-            db:
-                condition: service_healthy
-        networks:
-            - serverjars
-
     api:
         image: ghcr.io/undeadjess/serverjars-api:production
         restart: always
@@ -55,51 +40,18 @@ services:
             DB_PASSWORD: ExamplePassword-PleaseChange
             DB_NAME: mcserverjars
             LISTEN_PORT: 3000
-        depends_on:
-            db:
-                condition: service_healthy
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.api.rule=PathPrefix(`/api`)"
-            - "traefik.http.routers.api.middlewares=strip-api-prefix"
             - "traefik.http.services.api.loadbalancer.server.port=3000"
         networks:
             - serverjars
 
-    db:
-        image: mysql:5.7
-        restart: on-failure
-        environment:
-            MYSQL_ROOT_PASSWORD: ExamplePassword-PleaseChange
-            MYSQL_DATABASE: mcserverjars
-        healthcheck:
-            test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-            timeout: 20s
-            retries: 10
-        networks:
-            - serverjars
-
-    # Optional: Adminer for database management:
-    # adminer:
-    #   image: adminer
-    #   depends_on:
-    #     - db
-    #   labels:
-    #     - "traefik.enable=true"
-    #     - "traefik.http.routers.adminer.rule=PathPrefix(`/db`)"
-    #     - "traefik.http.services.adminer.loadbalancer.server.port=8080"
-    #   networks:
-    #     - serverjars
-
     watchtower:
-        command: "serverjars-api serverjars-web serverjars-fetcher --interval 30"
+        command: "serverjars-api serverjars-web --interval 30"
         image: containrrr/watchtower
         volumes:
             - "/var/run/docker.sock:/var/run/docker.sock"
         container_name: watchtower
-
-    # Middleware for stripping the /api prefix
-    strip-api-prefix:
-        image: traefik:v2.5
-        labels:
-            - "traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes=/api"
+        networks:
+            - serverjars
