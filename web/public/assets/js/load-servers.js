@@ -65,7 +65,7 @@ const openTab = async (type) => {
             previousVersionsButton.className = "previous-versions-button";
             previousVersionsButton.innerHTML = "Show Previous Versions";
             previousVersionsButton.onclick = () => {
-                window.location = "versions" + "&type=" + type + "&server=" + server;
+                window.location = "version-browser" + "?type=" + type + "&server=" + server;
             }
 
             versionList.appendChild(latest);

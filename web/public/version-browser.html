@@ -4,8 +4,9 @@
         <meta charset="UTF-8" />
         <title>ServerJars</title>
         <link rel="stylesheet" href="assets/css/main.css"/>
+        <link rel="stylesheet" href="assets/css/version-browser.css"/>
         <link rel="icon" href="assets/images/favicon.ico"/>
-        <script src="assets/js/load-servers.js" defer></script>
+        <script src="assets/js/version-browser.js" defer></script>
     </head>
     <body>
         <header>
@@ -20,18 +21,27 @@
                 <li><a href="about"><img src="assets/images/icons/info.svg" class="navicon">About</a></li>
             </ul>
         </nav>
-        <main>
-            <h1>ServerJars</h1>
-            <p>ServerJars is a project that provides a collection of server jars for various Minecraft server types.</p>
-            <p>Check out our <a href="autoupdater">AutoUpdater</a> for automatic updates!</p>
-        </main>
-        <section class="type-tabs">
-            <ul id="type-list">
-                <li id="loading-type"><p>loading types...</p></li>
+
+        <section id="version-content">
+            <h1>Version Browser</h1>
+            <div class="dropdowns">
+                <select id="type-select" disabled>
+                    <option value="" disabled selected>Select a server type</option>
+                </select>
+                <select id="server-select" disabled>
+                    <option value="" disabled selected>Select a server</option>
+                </select>
+                <select id="version-select" disabled>
+                    <option value="" disabled selected>Select a version (optional)</option>
+                </select>
+            </div>
+            <h2>Available Versions</h2>
+            <p id="version-info">Select a server type and server to view available versions.</p>
+            <ul id="version-list">
+                <!-- Version items will be dynamically inserted here -->
             </ul>
         </section>
-        <section id="type-content">
-        </section>
+        
         <footer>
             <p>&copy; <script>document.write(new Date().getFullYear())</script> ServerJars</p>
             <p><a href="https://jeso.dev">Jessica S.</a></p>  <!--  | <a href="https://about.juxtacloud.com">Juxtacloud</a> -->
